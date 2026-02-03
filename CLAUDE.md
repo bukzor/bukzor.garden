@@ -3,43 +3,32 @@ depends:
     - skills/llm-collab
 ---
 
-# [Project] - Development Guide for Claude
+# bukzor.garden — Development Guide
+
+## Strategic Context
+
+This repo is part of bukzor-llc. For constitution, principles, and product strategy:
+`docs/private.bukzor-llc/` — see `constitution.kb/CLAUDE.md` for when to consult.
 
 ## Quick Reference
 
-**Implementing new [component]:**
-[2-3 sentence summary] → See [HACKING.md#section](HACKING.md#section)
-
-**Understanding [key concept]:**
-[Brief explanation] → See [docs/dev/technical-design.md#concept](docs/dev/technical-design.md#concept)
-
 **Current tasks:** See [.claude/todo.md] for active work and priorities.
 
-## Architecture Overview
+**Dev setup:** See [HACKING.md](HACKING.md)
 
-[3-5 sentence summary of how the system works]
+## Architecture
 
-**Key subsystems:**
-- [Subsystem 1]: [One sentence] → [Link to docs/dev/technical-design/subsystem-1.md]
-- [Subsystem 2]: [One sentence] → [Link to docs/dev/technical-design/subsystem-2.md]
+Monorepo for web games. Rust → WASM via Trunk. Static hosting on Cloudflare Pages.
 
-## Data Flow
-
-[Brief description or ASCII diagram showing how data moves through system]
-
-See [docs/dev/technical-design.md#data-flow](docs/dev/technical-design.md#data-flow) for details.
-
-## Key Files
-
-- `[path]` - [What it does]
-- `[path]` - [What it does]
+```
+apps/           # individual games
+packages/       # shared code (future)
+ops/            # deployment config (future)
+docs/           # architecture, devlogs, ADRs
+```
 
 ## Conventions
 
-- [Style/naming/organization conventions]
-
-## Testing
-
-[How to run tests, what to check]
-
-See [HACKING.md#testing](HACKING.md#testing) for details.
+- Keep it simple. These are calibration projects.
+- No abstractions until earned (see constitution: `process.kb/abstraction-earned.md`).
+- Ship fast, iterate later.
