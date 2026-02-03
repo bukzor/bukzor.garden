@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
-use wasm_bindgen::{prelude::*, closure::Closure, JsCast};
-use web_sys::{Document, Element, MouseEvent};
+use gloo_events::EventListener;
+use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::{Document, Element};
 
 #[derive(Clone, Copy, PartialEq)]
 enum Mark {
@@ -52,10 +53,10 @@ impl Cell {
         Ok(el)
     }
 
-    fn on_click(&self, game: &Rc<RefCell<Game>>) -> Closure<dyn Fn(MouseEvent)> {
+    fn on_click(&self, game: &Rc<RefCell<Game>>, element: &Element) -> EventListener {
         let game = Rc::clone(game);
         let (row, col) = (self.row, self.col);
-        Closure::new(move |event: MouseEvent| {
+        EventListener::new(element, "click", move |event| {
             let Some(target) = event.target() else { return };
             let Ok(element) = target.dyn_into::<Element>() else { return };
             let mut game = game.borrow_mut();
@@ -113,9 +114,7 @@ fn render_board(document: &Document, game: Rc<RefCell<Game>>) -> Result<Element,
     for row in game.borrow().cells {
         for cell in row {
             let cell_el = cell.render(document)?;
-            let closure = cell.on_click(&game);
-            cell_el.add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())?;
-            closure.forget();
+            cell.on_click(&game, &cell_el).forget();
             container.append_child(&cell_el)?;
         }
     }
