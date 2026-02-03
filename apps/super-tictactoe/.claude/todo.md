@@ -18,4 +18,5 @@
 
 ## Later
 
+- [ ] Undo support
 - [ ] Revisit board styling (beyond classic lines-on-white)
