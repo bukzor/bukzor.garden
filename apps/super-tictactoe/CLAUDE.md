@@ -31,3 +31,7 @@ Rust → WASM via Trunk. Single-page app, no backend.
 trunk serve    # dev server with hot reload
 trunk build    # production build to dist/
 ```
+
+## Conventions
+
+**Milestones** in `.claude/todo.md` represent discrete deliverables, each with at least one git commit.

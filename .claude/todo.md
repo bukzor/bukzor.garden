@@ -1,15 +1,7 @@
 <anthropic-skill-ownership llm-subtask />
 
 - [x] WASM hello-world for super-tictactoe
-
-- [ ] Super Tic-Tac-Toe V0
-  - [ ] 9x9 board rendering (3x3 meta-grid of 3x3 sub-boards)
-  - [ ] Click to place X/O
-  - [ ] Sub-board win detection
-  - [ ] Meta-board win detection
-  - [ ] AI opponent (minimax)
-  - [ ] "$0.50/mo support" button
-  - [ ] Deploy to Cloudflare Pages
+- [ ] Super Tic-Tac-Toe V0 — see `apps/super-tictactoe/.claude/todo.md`
 
 ## Later
 
