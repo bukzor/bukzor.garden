@@ -39,31 +39,31 @@ Separation: **data** (Board) -> **logic** (Game) -> **UI** (Ui) -> **wasm glue**
 
 ## Implementation Steps
 
-- [ ] Rename current `Game` -> `Board`
-  - [ ] `boards` -> `sub_boards`
-  - [ ] Remove `current_turn`, `active_board` (will move to new Game)
-  - [ ] Keep `outcome` (physical state - you can see who won by looking)
-- [ ] Create new `Game` struct
-  - [ ] `board: Board`
-  - [ ] `current_turn: Mark`
-  - [ ] `active_sub_board: Option<(usize, usize)>`
-  - [ ] Move `play()`, `legal_moves()` here
-- [ ] Rename current `App` -> `Ui`
-  - [ ] `game: RefCell<Game>`
-  - [ ] Keep `board_el`, `final_status`
+- [x] Rename current `Game` -> `Board`
+  - [x] `boards` -> `sub_boards`
+  - [x] Remove `current_turn`, `active_board` (will move to new Game)
+  - [x] Keep `outcome` (physical state - you can see who won by looking)
+- [x] Create new `Game` struct
+  - [x] `board: Board`
+  - [x] `current_turn: Mark`
+  - [x] `active_sub_board: Option<(usize, usize)>`
+  - [x] Move `play()`, `legal_moves()` here
+- [x] Rename current `App` -> `Ui`
+  - [x] `game: RefCell<Game>`
+  - [x] Keep `board_el`, `final_status`
   - [ ] Add `auto_play: AutoPlay` (for next step)
-  - [ ] Move `handle_click()` here
-- [ ] Create new `App` as wasm entry point
-  - [ ] `ui: Rc<Ui>`
-  - [ ] `_listener: EventListener`
-  - [ ] Holds listener to keep it alive; Ui is Rc-wrapped for closures
+  - [x] Move `handle_click()` here
+- [x] Create new `App` as wasm entry point
+  - [x] `ui: Rc<Ui>`
+  - [x] `_listener: EventListener`
+  - [x] Holds listener to keep it alive; Ui is Rc-wrapped for closures
 
 ## Success Criteria
 
-- [ ] Each type's name matches what it contains
-- [ ] `cargo check` passes
-- [ ] `trunk build` succeeds
-- [ ] Game still playable (manual test)
+- [x] Each type's name matches what it contains
+- [x] `cargo check` passes
+- [x] `trunk build` succeeds
+- [x] Game still playable (manual test)
 
 ## Notes
 

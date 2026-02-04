@@ -13,7 +13,7 @@
     - [x] Sub-board win indicator
     - [x] Active sub-board constraint
     - [x] Meta-board win detection
-  - [ ] [Refactor object model: Board/Game/Ui/App separation](todo.kb/2026-02-04-000-refactor-object-model-board-game-ui-app.md)
+  - [x] [Refactor object model: Board/Game/Ui/App separation](todo.kb/2026-02-04-000-refactor-object-model-board-game-ui-app.md)
   - [ ] AI opponent — minimax
     - [ ] Auto-play checkboxes (test harness)
     - abandoned WIP: `archive/auto-play-wip-2026-02-04`
