@@ -108,20 +108,32 @@ impl SubBoard {
     }
 }
 
-struct Game {
-    boards: [[SubBoard; 3]; 3],
-    current_turn: Mark,
+struct Board {
+    sub_boards: [[SubBoard; 3]; 3],
     outcome: Outcome,
-    active_board: Option<(usize, usize)>,
+}
+
+impl Board {
+    fn new() -> Self {
+        Self {
+            sub_boards: [[SubBoard::new(); 3]; 3],
+            outcome: Outcome::InProgress,
+        }
+    }
+}
+
+struct Game {
+    board: Board,
+    current_turn: Mark,
+    active_sub_board: Option<(usize, usize)>,
 }
 
 impl Game {
     fn new() -> Self {
         Self {
-            boards: [[SubBoard::new(); 3]; 3],
+            board: Board::new(),
             current_turn: Mark::X,
-            outcome: Outcome::InProgress,
-            active_board: None,
+            active_sub_board: None,
         }
     }
 
@@ -130,44 +142,48 @@ impl Game {
     }
 
     fn check_winner(&self) -> Option<Mark> {
-        check_winner(&self.boards, |sb| match sb.outcome {
+        check_winner(&self.board.sub_boards, |sb| match sb.outcome {
             Outcome::Win(mark) => Some(mark),
             _ => None,
         })
     }
 
     fn is_full(&self) -> bool {
-        self.boards
+        self.board.sub_boards
             .iter()
             .flatten()
             .all(|sb| sb.outcome != Outcome::InProgress)
     }
 
+    fn outcome(&self) -> Outcome {
+        self.board.outcome
+    }
+
     fn play(&mut self, meta_row: usize, meta_col: usize, row: usize, col: usize) -> bool {
-        if self.outcome != Outcome::InProgress {
+        if self.board.outcome != Outcome::InProgress {
             return false;
         }
-        if let Some((ar, ac)) = self.active_board {
+        if let Some((ar, ac)) = self.active_sub_board {
             if (meta_row, meta_col) != (ar, ac) {
                 return false;
             }
         }
-        let sub_board = &mut self.boards[meta_row][meta_col];
+        let sub_board = &mut self.board.sub_boards[meta_row][meta_col];
         if !sub_board.play(row, col, self.current_turn) {
             return false;
         }
         if let Some(winner) = self.check_winner() {
-            self.outcome = Outcome::Win(winner);
+            self.board.outcome = Outcome::Win(winner);
             self.current_turn = Mark::Empty;
-            self.active_board = None;
+            self.active_sub_board = None;
         } else if self.is_full() {
-            self.outcome = Outcome::Draw;
+            self.board.outcome = Outcome::Draw;
             self.current_turn = Mark::Empty;
-            self.active_board = None;
+            self.active_sub_board = None;
         } else {
             self.current_turn = self.current_turn.next();
-            let target = &self.boards[row][col];
-            self.active_board = if target.outcome == Outcome::InProgress {
+            let target = &self.board.sub_boards[row][col];
+            self.active_sub_board = if target.outcome == Outcome::InProgress {
                 Some((row, col))
             } else {
                 None
@@ -221,17 +237,17 @@ fn render_sub_board(
 }
 
 fn render_board(document: &Document, game: &Game) -> Result<Element, JsValue> {
-    let board = document.create_element("div")?;
-    board.set_class_name("board");
+    let board_el = document.create_element("div")?;
+    board_el.set_class_name("board");
 
-    for (meta_row, row_boards) in game.boards.iter().enumerate() {
+    for (meta_row, row_boards) in game.board.sub_boards.iter().enumerate() {
         for (meta_col, sub_board) in row_boards.iter().enumerate() {
             let sub = render_sub_board(document, meta_row, meta_col, sub_board)?;
-            board.append_child(&sub)?;
+            board_el.append_child(&sub)?;
         }
     }
 
-    Ok(board)
+    Ok(board_el)
 }
 
 fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize, usize, usize)> {
@@ -277,9 +293,9 @@ fn on_board_click(board_el: &Element, game: Rc<RefCell<Game>>, final_status: Ele
 
         let mut game = game.borrow_mut();
         if game.play(meta_row, meta_col, row, col) {
-            el.set_text_content(Some(game.boards[meta_row][meta_col].cells[row][col].symbol()));
+            el.set_text_content(Some(game.board.sub_boards[meta_row][meta_col].cells[row][col].symbol()));
 
-            let sub_outcome = game.boards[meta_row][meta_col].outcome;
+            let sub_outcome = game.board.sub_boards[meta_row][meta_col].outcome;
             if sub_outcome != Outcome::InProgress {
                 if let Some(sub_board_el) = el.parent_element() {
                     if let Ok(Some(status_el)) = sub_board_el.query_selector(".status") {
@@ -294,11 +310,11 @@ fn on_board_click(board_el: &Element, game: Rc<RefCell<Game>>, final_status: Ele
             // Navigate: cell → sub-board → board
             if let Some(sub_board_el) = el.parent_element() {
                 if let Some(board_el) = sub_board_el.parent_element() {
-                    update_constraints(&board_el, game.active_board);
+                    update_constraints(&board_el, game.active_sub_board);
                 }
             }
 
-            match game.outcome {
+            match game.outcome() {
                 Outcome::Win(mark) => {
                     final_status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
                 }
