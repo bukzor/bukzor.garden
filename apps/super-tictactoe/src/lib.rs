@@ -198,6 +198,10 @@ fn render_sub_board(
         }
     }
 
+    let outcome = document.create_element("div")?;
+    outcome.set_class_name("outcome");
+    el.append_child(&outcome)?;
+
     Ok(el)
 }
 
@@ -234,6 +238,19 @@ fn on_board_click(board: &Element, game: Rc<RefCell<Game>>, status: Element) -> 
         let mut game = game.borrow_mut();
         if game.play(meta_row, meta_col, row, col) {
             el.set_text_content(Some(game.boards[meta_row][meta_col].cells[row][col].symbol()));
+
+            let sub_outcome = game.boards[meta_row][meta_col].outcome;
+            if sub_outcome != Outcome::InProgress {
+                if let Some(sub_board) = el.parent_element() {
+                    if let Ok(Some(outcome_el)) = sub_board.query_selector(".outcome") {
+                        let _ = outcome_el.set_attribute("data-resolved", "");
+                        if let Outcome::Win(winner) = sub_outcome {
+                            outcome_el.set_text_content(Some(winner.symbol()));
+                        }
+                    }
+                }
+            }
+
             match game.outcome {
                 Outcome::Win(mark) => {
                     status.set_text_content(Some(&format!("{} wins!", mark.symbol())));

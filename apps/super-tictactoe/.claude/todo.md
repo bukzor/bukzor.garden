@@ -10,7 +10,7 @@
   - [ ] Super-ify (3x3 → 9x9)
     - [x] Refactor: generic `check_winner` function
     - [x] 9x9 grid without constraints (data + render + click)
-    - [ ] Sub-board win indicator
+    - [x] Sub-board win indicator
     - [ ] Active sub-board constraint
     - [ ] Meta-board win detection
   - [ ] AI opponent — minimax
