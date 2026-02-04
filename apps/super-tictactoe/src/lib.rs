@@ -56,6 +56,19 @@ const fn winning_lines() -> [[(usize, usize); 3]; 8] {
 
 const WINNING_LINES: [[(usize, usize); 3]; 8] = winning_lines();
 
+fn check_winner<T: Copy + PartialEq>(
+    grid: &[[T; 3]; 3],
+    to_mark: impl Fn(T) -> Option<Mark>,
+) -> Option<Mark> {
+    for line in WINNING_LINES {
+        let [a, b, c] = line.map(|(r, c)| to_mark(grid[r][c]));
+        if a.is_some() && a == b && b == c {
+            return a;
+        }
+    }
+    None
+}
+
 struct Game {
     board: [[Mark; 3]; 3],
     current_turn: Mark,
@@ -76,13 +89,7 @@ impl Game {
     }
 
     fn check_winner(&self) -> Option<Mark> {
-        for line in WINNING_LINES {
-            let [a, b, c] = line.map(|(r, c)| self.board[r][c]);
-            if a != Mark::Empty && a == b && b == c {
-                return Some(a);
-            }
-        }
-        None
+        check_winner(&self.board, |m| (m != Mark::Empty).then_some(m))
     }
 
     fn is_full(&self) -> bool {
