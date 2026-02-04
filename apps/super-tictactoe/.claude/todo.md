@@ -6,7 +6,7 @@
   - [ ] Basic tic-tac-toe (3x3)
     - [x] Board rendering
     - [x] Input handling — place X/O via click/touch
-    - [ ] Win detection
+    - [x] Win detection
   - [ ] Super-ify (3x3 → 9x9)
     - [ ] Meta-grid structure (3x3 of sub-boards)
     - [ ] Sub-board win detection
