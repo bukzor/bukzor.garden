@@ -137,10 +137,6 @@ impl Game {
         }
     }
 
-    fn shared() -> Rc<RefCell<Self>> {
-        Rc::new(RefCell::new(Self::new()))
-    }
-
     fn check_winner(&self) -> Option<Mark> {
         check_winner(&self.board.sub_boards, |sb| match sb.outcome {
             Outcome::Win(mark) => Some(mark),
@@ -287,11 +283,32 @@ fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) 
     }
 }
 
-fn on_board_click(board_el: &Element, game: Rc<RefCell<Game>>, final_status: Element) -> EventListener {
-    EventListener::new(board_el, "click", move |event| {
+struct Ui {
+    game: RefCell<Game>,
+    board_el: Element,
+    final_status: Element,
+}
+
+impl Ui {
+    fn new(document: &Document) -> Result<Self, JsValue> {
+        let body = document.body().ok_or("no body")?;
+
+        let game = RefCell::new(Game::new());
+
+        let final_status = document.create_element("div")?;
+        final_status.set_class_name("final-status");
+        body.append_child(&final_status)?;
+
+        let board_el = render_board(document, &game.borrow())?;
+        body.append_child(&board_el)?;
+
+        Ok(Ui { game, board_el, final_status })
+    }
+
+    fn handle_click(&self, event: &web_sys::Event) {
         let Some((el, meta_row, meta_col, row, col)) = cell_from_event(event) else { return };
 
-        let mut game = game.borrow_mut();
+        let mut game = self.game.borrow_mut();
         if game.play(meta_row, meta_col, row, col) {
             el.set_text_content(Some(game.board.sub_boards[meta_row][meta_col].cells[row][col].symbol()));
 
@@ -316,20 +333,20 @@ fn on_board_click(board_el: &Element, game: Rc<RefCell<Game>>, final_status: Ele
 
             match game.outcome() {
                 Outcome::Win(mark) => {
-                    final_status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
+                    self.final_status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
                 }
                 Outcome::Draw => {
-                    final_status.set_text_content(Some("Draw!"));
+                    self.final_status.set_text_content(Some("Draw!"));
                 }
                 Outcome::InProgress => {}
             }
         }
-    })
+    }
 }
 
 #[wasm_bindgen]
 pub struct App {
-    game: Rc<RefCell<Game>>,
+    ui: Rc<Ui>,
     _listener: EventListener,
 }
 
@@ -337,23 +354,18 @@ pub struct App {
 impl App {
     #[wasm_bindgen(constructor)]
     pub fn new(document: Document) -> Result<App, JsValue> {
-        let body = document.body().ok_or("no body")?;
+        let ui = Rc::new(Ui::new(&document)?);
 
-        let game = Game::shared();
+        let ui_for_listener = Rc::clone(&ui);
+        let listener = EventListener::new(&ui.board_el, "click", move |event| {
+            ui_for_listener.handle_click(event);
+        });
 
-        let final_status = document.create_element("div")?;
-        final_status.set_class_name("final-status");
-        body.append_child(&final_status)?;
-
-        let board = render_board(&document, &game.borrow())?;
-        let listener = on_board_click(&board, Rc::clone(&game), final_status);
-        body.append_child(&board)?;
-
-        Ok(App { game, _listener: listener })
+        Ok(App { ui, _listener: listener })
     }
 
     #[wasm_bindgen(getter)]
     pub fn current_turn(&self) -> String {
-        self.game.borrow().current_turn.symbol().to_string()
+        self.ui.game.borrow().current_turn.symbol().to_string()
     }
 }
