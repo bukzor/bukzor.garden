@@ -112,6 +112,7 @@ struct Game {
     boards: [[SubBoard; 3]; 3],
     current_turn: Mark,
     outcome: Outcome,
+    active_board: Option<(usize, usize)>,
 }
 
 impl Game {
@@ -120,6 +121,7 @@ impl Game {
             boards: [[SubBoard::new(); 3]; 3],
             current_turn: Mark::X,
             outcome: Outcome::InProgress,
+            active_board: None,
         }
     }
 
@@ -145,6 +147,11 @@ impl Game {
         if self.outcome != Outcome::InProgress {
             return false;
         }
+        if let Some((ar, ac)) = self.active_board {
+            if (meta_row, meta_col) != (ar, ac) {
+                return false;
+            }
+        }
         let sub_board = &mut self.boards[meta_row][meta_col];
         if !sub_board.play(row, col, self.current_turn) {
             return false;
@@ -152,11 +159,19 @@ impl Game {
         if let Some(winner) = self.check_winner() {
             self.outcome = Outcome::Win(winner);
             self.current_turn = Mark::Empty;
+            self.active_board = None;
         } else if self.is_full() {
             self.outcome = Outcome::Draw;
             self.current_turn = Mark::Empty;
+            self.active_board = None;
         } else {
             self.current_turn = self.current_turn.next();
+            let target = &self.boards[row][col];
+            self.active_board = if target.outcome == Outcome::InProgress {
+                Some((row, col))
+            } else {
+                None
+            };
         }
         true
     }
@@ -198,9 +213,9 @@ fn render_sub_board(
         }
     }
 
-    let outcome = document.create_element("div")?;
-    outcome.set_class_name("outcome");
-    el.append_child(&outcome)?;
+    let status = document.create_element("div")?;
+    status.set_class_name("status");
+    el.append_child(&status)?;
 
     Ok(el)
 }
@@ -231,8 +246,33 @@ fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize, usi
     Some((el, meta_row, meta_col, row, col))
 }
 
-fn on_board_click(board: &Element, game: Rc<RefCell<Game>>, status: Element) -> EventListener {
-    EventListener::new(board, "click", move |event| {
+fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) {
+    let children = board_el.children();
+    for i in 0..children.length() {
+        let Some(sub) = children.item(i) else { continue };
+        let Ok(Some(status)) = sub.query_selector(".status") else { continue };
+
+        // Skip resolved boards - they keep their resolved styling
+        if status.has_attribute("data-resolved") {
+            continue;
+        }
+
+        let mr: usize = sub.get_attribute("data-meta-row").and_then(|s: String| s.parse().ok()).unwrap_or(99);
+        let mc: usize = sub.get_attribute("data-meta-col").and_then(|s: String| s.parse().ok()).unwrap_or(99);
+
+        match active_board {
+            Some((ar, ac)) if (mr, mc) != (ar, ac) => {
+                let _ = status.set_attribute("data-constrained", "");
+            }
+            _ => {
+                let _ = status.remove_attribute("data-constrained");
+            }
+        }
+    }
+}
+
+fn on_board_click(board_el: &Element, game: Rc<RefCell<Game>>, final_status: Element) -> EventListener {
+    EventListener::new(board_el, "click", move |event| {
         let Some((el, meta_row, meta_col, row, col)) = cell_from_event(event) else { return };
 
         let mut game = game.borrow_mut();
@@ -241,22 +281,29 @@ fn on_board_click(board: &Element, game: Rc<RefCell<Game>>, status: Element) -> 
 
             let sub_outcome = game.boards[meta_row][meta_col].outcome;
             if sub_outcome != Outcome::InProgress {
-                if let Some(sub_board) = el.parent_element() {
-                    if let Ok(Some(outcome_el)) = sub_board.query_selector(".outcome") {
-                        let _ = outcome_el.set_attribute("data-resolved", "");
+                if let Some(sub_board_el) = el.parent_element() {
+                    if let Ok(Some(status_el)) = sub_board_el.query_selector(".status") {
+                        let _ = status_el.set_attribute("data-resolved", "");
                         if let Outcome::Win(winner) = sub_outcome {
-                            outcome_el.set_text_content(Some(winner.symbol()));
+                            status_el.set_text_content(Some(winner.symbol()));
                         }
                     }
                 }
             }
 
+            // Navigate: cell → sub-board → board
+            if let Some(sub_board_el) = el.parent_element() {
+                if let Some(board_el) = sub_board_el.parent_element() {
+                    update_constraints(&board_el, game.active_board);
+                }
+            }
+
             match game.outcome {
                 Outcome::Win(mark) => {
-                    status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
+                    final_status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
                 }
                 Outcome::Draw => {
-                    status.set_text_content(Some("Draw!"));
+                    final_status.set_text_content(Some("Draw!"));
                 }
                 Outcome::InProgress => {}
             }
@@ -278,12 +325,12 @@ impl App {
 
         let game = Game::shared();
 
-        let status = document.create_element("div")?;
-        status.set_class_name("status");
-        body.append_child(&status)?;
+        let final_status = document.create_element("div")?;
+        final_status.set_class_name("final-status");
+        body.append_child(&final_status)?;
 
         let board = render_board(&document, &game.borrow())?;
-        let listener = on_board_click(&board, Rc::clone(&game), status);
+        let listener = on_board_click(&board, Rc::clone(&game), final_status);
         body.append_child(&board)?;
 
         Ok(App { game, _listener: listener })

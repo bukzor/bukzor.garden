@@ -7,12 +7,12 @@
     - [x] Board rendering
     - [x] Input handling — place X/O via click/touch
     - [x] Win detection
-  - [ ] Super-ify (3x3 → 9x9)
+  - [x] Super-ify (3x3 → 9x9)
     - [x] Refactor: generic `check_winner` function
     - [x] 9x9 grid without constraints (data + render + click)
     - [x] Sub-board win indicator
-    - [ ] Active sub-board constraint
-    - [ ] Meta-board win detection
+    - [x] Active sub-board constraint
+    - [x] Meta-board win detection
   - [ ] AI opponent — minimax
   - [ ] Theme selector — one vanity SKU (e.g. X/O colors)
   - [ ] Support button — "$0.50/mo" external checkout
@@ -20,5 +20,6 @@
 
 ## Later
 
+- [ ] Unit tests
 - [ ] Undo support
 - [ ] Revisit board styling (beyond classic lines-on-white)

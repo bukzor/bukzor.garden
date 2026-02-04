@@ -5,7 +5,7 @@ body {
     padding: 20px;
 }
 
-.status {
+.final-status {
     font-family: sans-serif;
     font-size: 24px;
     font-weight: bold;
@@ -27,7 +27,7 @@ body {
     padding: 10px;
 }
 
-.outcome {
+.status {
     position: absolute;
     inset: 0;
     display: none;
@@ -40,8 +40,13 @@ body {
     pointer-events: none;
 }
 
-.outcome[data-resolved] {
+.status[data-resolved] {
     display: flex;
+}
+
+.status[data-constrained] {
+    display: flex;
+    background: rgba(128, 128, 128, 0.4);
 }
 
 .sub-board[data-meta-row="0"] { border-top: none; }
