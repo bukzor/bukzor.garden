@@ -5,7 +5,7 @@
 - [ ] V0 milestones
   - [ ] Basic tic-tac-toe (3x3)
     - [x] Board rendering
-    - [ ] Input handling — place X/O via click/touch
+    - [x] Input handling — place X/O via click/touch
     - [ ] Win detection
   - [ ] Super-ify (3x3 → 9x9)
     - [ ] Meta-grid structure (3x3 of sub-boards)

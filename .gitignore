@@ -13,7 +13,7 @@ pkg/
 # IDE
 .idea/
 .vscode/
-*.swp
+.*.sw[a-z]
 *~
 
 # OS

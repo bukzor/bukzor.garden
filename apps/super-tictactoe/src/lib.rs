@@ -19,7 +19,7 @@ impl Mark {
         }
     }
 
-    fn next_turn(self) -> Self {
+    fn next(self) -> Self {
         match self {
             Mark::X => Mark::O,
             Mark::O => Mark::X,
@@ -28,111 +28,99 @@ impl Mark {
     }
 }
 
-#[derive(Clone, Copy)]
-struct Cell {
-    row: usize,
-    col: usize,
-    mark: Mark,
-}
-
-impl Cell {
-    fn new(row: usize, col: usize) -> Self {
-        Self {
-            row,
-            col,
-            mark: Mark::Empty,
-        }
-    }
-
-    fn render(&self, document: &Document) -> Result<Element, JsValue> {
-        let el = document.create_element("div")?;
-        el.set_class_name("cell");
-        el.set_attribute("data-row", &self.row.to_string())?;
-        el.set_attribute("data-col", &self.col.to_string())?;
-        el.set_text_content(Some(self.mark.symbol()));
-        Ok(el)
-    }
-
-    fn on_click(&self, game: &Rc<RefCell<Game>>, element: &Element) -> EventListener {
-        let game = Rc::clone(game);
-        let (row, col) = (self.row, self.col);
-        EventListener::new(element, "click", move |event| {
-            let Some(target) = event.target() else { return };
-            let Ok(element) = target.dyn_into::<Element>() else { return };
-            let mut game = game.borrow_mut();
-            if game.play(row, col) {
-                element.set_text_content(Some(game.cells[row][col].mark.symbol()));
-            }
-        })
-    }
-}
-
 struct Game {
-    cells: [[Cell; 3]; 3],
+    board: [[Mark; 3]; 3],
     current_turn: Mark,
 }
 
 impl Game {
     fn new() -> Self {
         Self {
-            cells: std::array::from_fn(|row| std::array::from_fn(|col| Cell::new(row, col))),
+            board: [[Mark::Empty; 3]; 3],
             current_turn: Mark::X,
         }
     }
 
+    fn shared() -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Self::new()))
+    }
+
     fn play(&mut self, row: usize, col: usize) -> bool {
-        if self.cells[row][col].mark != Mark::Empty {
+        if self.board[row][col] != Mark::Empty {
             return false;
         }
-        self.cells[row][col].mark = self.current_turn;
-        self.current_turn = self.current_turn.next_turn();
+        self.board[row][col] = self.current_turn;
+        self.current_turn = self.current_turn.next();
         true
     }
 }
 
-fn setup_head(document: &Document) -> Result<(), JsValue> {
-    let head = document.head().ok_or("no head")?;
-
-    document.set_title("Tic-Tac-Toe");
-
-    let charset = document.create_element("meta")?;
-    charset.set_attribute("charset", "utf-8")?;
-    head.append_child(&charset)?;
-
-    let viewport = document.create_element("meta")?;
-    viewport.set_attribute("name", "viewport")?;
-    viewport.set_attribute("content", "width=device-width, initial-scale=1")?;
-    head.append_child(&viewport)?;
-
-    Ok(())
+fn render_cell(document: &Document, row: usize, col: usize, mark: Mark) -> Result<Element, JsValue> {
+    let el = document.create_element("div")?;
+    el.set_class_name("cell");
+    el.set_attribute("data-row", &row.to_string())?;
+    el.set_attribute("data-col", &col.to_string())?;
+    el.set_text_content(Some(mark.symbol()));
+    Ok(el)
 }
 
-fn render_board(document: &Document, game: Rc<RefCell<Game>>) -> Result<Element, JsValue> {
-    let container = document.create_element("div")?;
-    container.set_class_name("board");
+fn render_board(document: &Document, game: &Game) -> Result<Element, JsValue> {
+    let board = document.create_element("div")?;
+    board.set_class_name("board");
 
-    for row in game.borrow().cells {
-        for cell in row {
-            let cell_el = cell.render(document)?;
-            cell.on_click(&game, &cell_el).forget();
-            container.append_child(&cell_el)?;
+    for (row, marks) in game.board.iter().enumerate() {
+        for (col, &mark) in marks.iter().enumerate() {
+            let cell: Element = render_cell(document, row, col, mark)?;
+            board.append_child(&cell)?;
         }
     }
 
-    Ok(container)
+    Ok(board)
 }
 
-#[wasm_bindgen(start)]
-fn start() -> Result<(), JsValue> {
-    let window = web_sys::window().ok_or("no window")?;
-    let document = window.document().ok_or("no document")?;
-    let body = document.body().ok_or("no body")?;
+fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize)> {
+    let el = event.target()?.dyn_ref::<Element>()?.clone();
+    if !el.class_list().contains("cell") {
+        return None;
+    }
+    let row = el.get_attribute("data-row")?.parse().ok()?;
+    let col = el.get_attribute("data-col")?.parse().ok()?;
+    Some((el, row, col))
+}
 
-    setup_head(&document)?;
+fn on_board_click(board: &Element, game: Rc<RefCell<Game>>) -> EventListener {
+    EventListener::new(board, "click", move |event| {
+        let Some((el, row, col)) = cell_from_event(event) else { return };
 
-    let game = Rc::new(RefCell::new(Game::new()));
-    let board_el = render_board(&document, game)?;
-    body.append_child(&board_el)?;
+        let mut game = game.borrow_mut();
+        if game.play(row, col) {
+            el.set_text_content(Some(game.board[row][col].symbol()));
+        }
+    })
+}
 
-    Ok(())
+#[wasm_bindgen]
+pub struct App {
+    game: Rc<RefCell<Game>>,
+    _listener: EventListener,
+}
+
+#[wasm_bindgen]
+impl App {
+    #[wasm_bindgen(constructor)]
+    pub fn new(document: Document) -> Result<App, JsValue> {
+        let body = document.body().ok_or("no body")?;
+
+        let game = Game::shared();
+        let board = render_board(&document, &game.borrow())?;
+        let listener = on_board_click(&board, Rc::clone(&game));
+        body.append_child(&board)?;
+
+        Ok(App { game, _listener: listener })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn current_turn(&self) -> String {
+        self.game.borrow().current_turn.symbol().to_string()
+    }
 }

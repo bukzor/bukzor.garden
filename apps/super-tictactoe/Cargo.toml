@@ -10,10 +10,10 @@ crate-type = ["cdylib"]
 gloo-events = "0.2"
 wasm-bindgen = "0.2.108"
 web-sys = { version = "0.3.85", features = [
+    "console",
     "Document",
+    "DomTokenList",
     "Element",
     "HtmlElement",
-    "HtmlHeadElement",
     "Node",
-    "Window",
 ] }
