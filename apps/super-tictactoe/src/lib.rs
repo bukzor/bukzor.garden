@@ -69,8 +69,47 @@ fn check_winner<T: Copy + PartialEq>(
     None
 }
 
+#[derive(Clone, Copy, PartialEq)]
+struct SubBoard {
+    cells: [[Mark; 3]; 3],
+    outcome: Outcome,
+}
+
+impl SubBoard {
+    fn new() -> Self {
+        Self {
+            cells: [[Mark::Empty; 3]; 3],
+            outcome: Outcome::InProgress,
+        }
+    }
+
+    fn check_winner(&self) -> Option<Mark> {
+        check_winner(&self.cells, |m| (m != Mark::Empty).then_some(m))
+    }
+
+    fn is_full(&self) -> bool {
+        self.cells.iter().flatten().all(|&m| m != Mark::Empty)
+    }
+
+    fn play(&mut self, row: usize, col: usize, mark: Mark) -> bool {
+        if self.outcome != Outcome::InProgress {
+            return false;
+        }
+        if self.cells[row][col] != Mark::Empty {
+            return false;
+        }
+        self.cells[row][col] = mark;
+        if let Some(winner) = self.check_winner() {
+            self.outcome = Outcome::Win(winner);
+        } else if self.is_full() {
+            self.outcome = Outcome::Draw;
+        }
+        true
+    }
+}
+
 struct Game {
-    board: [[Mark; 3]; 3],
+    boards: [[SubBoard; 3]; 3],
     current_turn: Mark,
     outcome: Outcome,
 }
@@ -78,7 +117,7 @@ struct Game {
 impl Game {
     fn new() -> Self {
         Self {
-            board: [[Mark::Empty; 3]; 3],
+            boards: [[SubBoard::new(); 3]; 3],
             current_turn: Mark::X,
             outcome: Outcome::InProgress,
         }
@@ -89,21 +128,27 @@ impl Game {
     }
 
     fn check_winner(&self) -> Option<Mark> {
-        check_winner(&self.board, |m| (m != Mark::Empty).then_some(m))
+        check_winner(&self.boards, |sb| match sb.outcome {
+            Outcome::Win(mark) => Some(mark),
+            _ => None,
+        })
     }
 
     fn is_full(&self) -> bool {
-        self.board.iter().flatten().all(|&m| m != Mark::Empty)
+        self.boards
+            .iter()
+            .flatten()
+            .all(|sb| sb.outcome != Outcome::InProgress)
     }
 
-    fn play(&mut self, row: usize, col: usize) -> bool {
+    fn play(&mut self, meta_row: usize, meta_col: usize, row: usize, col: usize) -> bool {
         if self.outcome != Outcome::InProgress {
             return false;
         }
-        if self.board[row][col] != Mark::Empty {
+        let sub_board = &mut self.boards[meta_row][meta_col];
+        if !sub_board.play(row, col, self.current_turn) {
             return false;
         }
-        self.board[row][col] = self.current_turn;
         if let Some(winner) = self.check_winner() {
             self.outcome = Outcome::Win(winner);
             self.current_turn = Mark::Empty;
@@ -117,12 +162,42 @@ impl Game {
     }
 }
 
-fn render_cell(document: &Document, row: usize, col: usize, mark: Mark) -> Result<Element, JsValue> {
+fn render_cell(
+    document: &Document,
+    meta_row: usize,
+    meta_col: usize,
+    row: usize,
+    col: usize,
+    mark: Mark,
+) -> Result<Element, JsValue> {
     let el = document.create_element("div")?;
     el.set_class_name("cell");
+    el.set_attribute("data-meta-row", &meta_row.to_string())?;
+    el.set_attribute("data-meta-col", &meta_col.to_string())?;
     el.set_attribute("data-row", &row.to_string())?;
     el.set_attribute("data-col", &col.to_string())?;
     el.set_text_content(Some(mark.symbol()));
+    Ok(el)
+}
+
+fn render_sub_board(
+    document: &Document,
+    meta_row: usize,
+    meta_col: usize,
+    sub_board: &SubBoard,
+) -> Result<Element, JsValue> {
+    let el = document.create_element("div")?;
+    el.set_class_name("sub-board");
+    el.set_attribute("data-meta-row", &meta_row.to_string())?;
+    el.set_attribute("data-meta-col", &meta_col.to_string())?;
+
+    for (row, marks) in sub_board.cells.iter().enumerate() {
+        for (col, &mark) in marks.iter().enumerate() {
+            let cell = render_cell(document, meta_row, meta_col, row, col, mark)?;
+            el.append_child(&cell)?;
+        }
+    }
+
     Ok(el)
 }
 
@@ -130,33 +205,35 @@ fn render_board(document: &Document, game: &Game) -> Result<Element, JsValue> {
     let board = document.create_element("div")?;
     board.set_class_name("board");
 
-    for (row, marks) in game.board.iter().enumerate() {
-        for (col, &mark) in marks.iter().enumerate() {
-            let cell: Element = render_cell(document, row, col, mark)?;
-            board.append_child(&cell)?;
+    for (meta_row, row_boards) in game.boards.iter().enumerate() {
+        for (meta_col, sub_board) in row_boards.iter().enumerate() {
+            let sub = render_sub_board(document, meta_row, meta_col, sub_board)?;
+            board.append_child(&sub)?;
         }
     }
 
     Ok(board)
 }
 
-fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize)> {
+fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize, usize, usize)> {
     let el = event.target()?.dyn_ref::<Element>()?.clone();
     if !el.class_list().contains("cell") {
         return None;
     }
+    let meta_row = el.get_attribute("data-meta-row")?.parse().ok()?;
+    let meta_col = el.get_attribute("data-meta-col")?.parse().ok()?;
     let row = el.get_attribute("data-row")?.parse().ok()?;
     let col = el.get_attribute("data-col")?.parse().ok()?;
-    Some((el, row, col))
+    Some((el, meta_row, meta_col, row, col))
 }
 
 fn on_board_click(board: &Element, game: Rc<RefCell<Game>>, status: Element) -> EventListener {
     EventListener::new(board, "click", move |event| {
-        let Some((el, row, col)) = cell_from_event(event) else { return };
+        let Some((el, meta_row, meta_col, row, col)) = cell_from_event(event) else { return };
 
         let mut game = game.borrow_mut();
-        if game.play(row, col) {
-            el.set_text_content(Some(game.board[row][col].symbol()));
+        if game.play(meta_row, meta_col, row, col) {
+            el.set_text_content(Some(game.boards[meta_row][meta_col].cells[row][col].symbol()));
             match game.outcome {
                 Outcome::Win(mark) => {
                     status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
