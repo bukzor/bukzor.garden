@@ -1,7 +1,7 @@
 <anthropic-skill-ownership llm-subtask />
 
 - [ ] V0 milestones
-  - [ ] Deploy — Cloudflare Pages, public URL
+  - [ ] Deploy — see [repo-level plan](../../.claude/todo.kb/2026-02-05-000-deploy-cloudflare-pages.md)
   - [ ] Theme selector — one vanity SKU (e.g. X/O colors)
   - [ ] AI opponent — minimax
     - [x] Auto-play checkboxes (test harness)
