@@ -32,7 +32,10 @@ See [`docs/dev/deploy.md`](docs/dev/deploy.md) — manual via wrangler, live at 
 Rust → WASM via Trunk. Single-page app, no backend.
 
 **Key files:**
-- `src/lib.rs` — WASM entry point, game logic will live here
+- `src/lib.rs` — WASM entry point (`App` struct)
+- `src/game.rs` — game types and logic (`Mark`, `Board`, `Game`, win detection)
+- `src/ai_random.rs` — random move picker (future: `ai_minimax.rs`)
+- `src/ui.rs` — DOM rendering and interaction
 - `index.html` — Trunk entry point
 - `dist/` — built output (gitignored)
 
