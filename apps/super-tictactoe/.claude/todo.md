@@ -30,3 +30,4 @@
 - [ ] Fix vertical gap glitch — 1-3px gap between sub-board cell borders
 - [ ] Unit tests
 - [ ] Revisit board styling (beyond classic lines-on-white)
+- [ ] Immutable game state — `play` returns new state instead of mutating, cleaner for minimax

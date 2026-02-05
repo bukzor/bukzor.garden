@@ -208,3 +208,200 @@ impl Game {
         moves
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -- Mark --
+
+    #[test]
+    fn mark_next_alternates() {
+        assert_eq!(Mark::X.next(), Mark::O);
+        assert_eq!(Mark::O.next(), Mark::X);
+        assert_eq!(Mark::Empty.next(), Mark::X);
+    }
+
+    // -- SubBoard --
+
+    #[test]
+    fn sub_board_starts_empty() {
+        let sb = SubBoard::new();
+        assert_eq!(sb.outcome, Outcome::InProgress);
+        for row in &sb.cells {
+            for &cell in row {
+                assert_eq!(cell, Mark::Empty);
+            }
+        }
+    }
+
+    #[test]
+    fn sub_board_play_places_mark() {
+        let mut sb = SubBoard::new();
+        assert!(sb.play(0, 0, Mark::X));
+        assert_eq!(sb.cells[0][0], Mark::X);
+    }
+
+    #[test]
+    fn sub_board_rejects_occupied_cell() {
+        let mut sb = SubBoard::new();
+        sb.play(0, 0, Mark::X);
+        assert!(!sb.play(0, 0, Mark::O));
+        assert_eq!(sb.cells[0][0], Mark::X);
+    }
+
+    #[test]
+    fn sub_board_rejects_play_after_win() {
+        let mut sb = SubBoard::new();
+        sb.play(0, 0, Mark::X);
+        sb.play(0, 1, Mark::X);
+        sb.play(0, 2, Mark::X);
+        assert_eq!(sb.outcome, Outcome::Win(Mark::X));
+        assert!(!sb.play(1, 0, Mark::O));
+    }
+
+    #[test]
+    fn sub_board_row_win() {
+        let mut sb = SubBoard::new();
+        for c in 0..3 {
+            sb.play(1, c, Mark::O);
+        }
+        assert_eq!(sb.outcome, Outcome::Win(Mark::O));
+    }
+
+    #[test]
+    fn sub_board_col_win() {
+        let mut sb = SubBoard::new();
+        for r in 0..3 {
+            sb.play(r, 2, Mark::X);
+        }
+        assert_eq!(sb.outcome, Outcome::Win(Mark::X));
+    }
+
+    #[test]
+    fn sub_board_diagonal_win() {
+        let mut sb = SubBoard::new();
+        for i in 0..3 {
+            sb.play(i, i, Mark::X);
+        }
+        assert_eq!(sb.outcome, Outcome::Win(Mark::X));
+    }
+
+    #[test]
+    fn sub_board_anti_diagonal_win() {
+        let mut sb = SubBoard::new();
+        for i in 0..3 {
+            sb.play(i, 2 - i, Mark::O);
+        }
+        assert_eq!(sb.outcome, Outcome::Win(Mark::O));
+    }
+
+    #[test]
+    fn sub_board_draw() {
+        let mut sb = SubBoard::new();
+        // X O X
+        // X X O
+        // O X O
+        let moves = [
+            (0, 0, Mark::X), (0, 1, Mark::O), (0, 2, Mark::X),
+            (1, 0, Mark::X), (1, 1, Mark::X), (1, 2, Mark::O),
+            (2, 0, Mark::O), (2, 1, Mark::X), (2, 2, Mark::O),
+        ];
+        for (r, c, mark) in moves {
+            sb.play(r, c, mark);
+        }
+        assert_eq!(sb.outcome, Outcome::Draw);
+    }
+
+    // -- Game: basics --
+
+    #[test]
+    fn game_starts_with_x() {
+        let g = Game::new();
+        assert_eq!(g.current_turn, Mark::X);
+        assert_eq!(g.active_sub_board, None);
+        assert_eq!(g.outcome(), Outcome::InProgress);
+    }
+
+    #[test]
+    fn game_first_move_anywhere() {
+        let g = Game::new();
+        // all 81 cells should be legal
+        assert_eq!(g.legal_moves().len(), 81);
+    }
+
+    #[test]
+    fn game_alternates_turns() {
+        let mut g = Game::new();
+        g.play(0, 0, 0, 0);
+        assert_eq!(g.current_turn, Mark::O);
+        g.play(0, 0, 1, 1);
+        assert_eq!(g.current_turn, Mark::X);
+    }
+
+    // -- Game: constraint enforcement --
+
+    #[test]
+    fn game_constrains_to_target_sub_board() {
+        let mut g = Game::new();
+        // play in sub-board (0,0), cell (1,2) → sends opponent to sub-board (1,2)
+        g.play(0, 0, 1, 2);
+        assert_eq!(g.active_sub_board, Some((1, 2)));
+
+        // playing in wrong sub-board is rejected
+        assert!(!g.play(0, 0, 0, 1));
+        // playing in correct sub-board works
+        assert!(g.play(1, 2, 0, 0));
+    }
+
+    #[test]
+    fn game_frees_constraint_when_target_resolved() {
+        let mut g = Game::new();
+        g.board.sub_boards[0][0].outcome = Outcome::Win(Mark::X);
+        // Play into cell (0,0) of sub-board (1,1) → target is (0,0) which is resolved
+        g.play(1, 1, 0, 0);
+        assert_eq!(g.active_sub_board, None);
+    }
+
+    // -- Game: legal_moves --
+
+    #[test]
+    fn legal_moves_respects_constraint() {
+        let mut g = Game::new();
+        g.play(0, 0, 1, 2); // → constrained to (1,2)
+        let moves = g.legal_moves();
+        assert!(moves.iter().all(|&(mr, mc, _, _)| (mr, mc) == (1, 2)));
+    }
+
+    #[test]
+    fn legal_moves_skips_resolved_boards() {
+        let mut g = Game::new();
+        g.board.sub_boards[1][1].outcome = Outcome::Win(Mark::X);
+        g.active_sub_board = None;
+        let moves = g.legal_moves();
+        assert!(moves.iter().all(|&(mr, mc, _, _)| (mr, mc) != (1, 1)));
+    }
+
+    #[test]
+    fn legal_moves_empty_after_game_over() {
+        let mut g = Game::new();
+        g.board.outcome = Outcome::Win(Mark::X);
+        assert!(g.legal_moves().is_empty());
+    }
+
+    // -- Game: meta-level win --
+
+    #[test]
+    fn game_detects_meta_row_win() {
+        let mut g = Game::new();
+        // Pre-win two sub-boards, then trigger the third via play()
+        g.board.sub_boards[0][0].outcome = Outcome::Win(Mark::X);
+        g.board.sub_boards[0][1].outcome = Outcome::Win(Mark::X);
+        g.board.sub_boards[0][2].cells[0][0] = Mark::X;
+        g.board.sub_boards[0][2].cells[0][1] = Mark::X;
+        g.current_turn = Mark::X;
+        g.active_sub_board = Some((0, 2));
+        g.play(0, 2, 0, 2); // X completes row in sub-board (0,2)
+        assert_eq!(g.outcome(), Outcome::Win(Mark::X));
+    }
+}
