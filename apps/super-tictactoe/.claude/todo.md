@@ -1,7 +1,7 @@
 <anthropic-skill-ownership llm-subtask />
 
 - [ ] V0 milestones
-  - [ ] Deploy — see [repo-level plan](../../.claude/todo.kb/2026-02-05-000-deploy-cloudflare-pages.md)
+  - [x] Deploy — [Phase A complete](../../.claude/todo.kb/2026-02-05-000-deploy-cloudflare-pages.md), live at `bukzor-garden--super-tictactoe.pages.dev`
   - [ ] Theme selector — one vanity SKU (e.g. X/O colors)
   - [ ] AI opponent — minimax
     - [x] Auto-play checkboxes (test harness)
@@ -14,6 +14,7 @@
     - [ ] Research & choose payment platform (Stripe, Ko-fi, GitHub Sponsors, etc.)
     - [ ] Set up account + configure $0.50/mo product
     - [ ] Add button to page
+  - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later
 

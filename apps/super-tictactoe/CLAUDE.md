@@ -14,6 +14,19 @@ depends:
 - "$0.50/mo support" button
 - Deploy to Cloudflare Pages
 
+## How To
+
+### Build & Run
+
+```bash
+trunk serve    # dev server with hot reload
+trunk build    # production build to dist/
+```
+
+### Deploy
+
+See [`docs/dev/deploy.md`](docs/dev/deploy.md) — manual via wrangler, live at `bukzor-garden--super-tictactoe.pages.dev`
+
 ## Architecture
 
 Rust → WASM via Trunk. Single-page app, no backend.
@@ -22,13 +35,6 @@ Rust → WASM via Trunk. Single-page app, no backend.
 - `src/lib.rs` — WASM entry point, game logic will live here
 - `index.html` — Trunk entry point
 - `dist/` — built output (gitignored)
-
-## Build & Run
-
-```bash
-trunk serve    # dev server with hot reload
-trunk build    # production build to dist/
-```
 
 ## Conventions
 

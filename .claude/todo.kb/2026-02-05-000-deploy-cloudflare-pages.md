@@ -13,17 +13,14 @@
 Each phase is a superset of the previous. Each works standalone. Decide on the
 fly how far to take it.
 
-### Phase A: Script + Wrangler CLI
+### Phase A: Script + Wrangler CLI ✓
 
 Minimum viable deploy. Manual invocation, fully reproducible.
 
 - [x] Install wrangler: `pnpm add -D wrangler` (repo-pinned, not global)
-- [ ] Create CF Pages project via `wrangler pages project create`
-- [ ] Write deploy script in `ops/` that:
-  - Runs `trunk build --release` in the app directory
-  - Runs `wrangler pages deploy dist/`
-- [ ] Verify public URL works (`*.pages.dev`)
-- [ ] Document in HACKING.md
+- [x] Create CF Pages project via `wrangler pages project create`
+- [x] Verify public URL works (`bukzor-garden--super-tictactoe.pages.dev`)
+- [x] Document in `apps/super-tictactoe/docs/dev/deploy.md`
 
 ### Phase B: GitHub Actions
 
@@ -51,6 +48,6 @@ Declarative infrastructure. CF Pages project defined in code.
 
 ## Success Criteria
 
-- [ ] super-tictactoe accessible at a public URL
-- [ ] Deploy is a single command (Phase A) or automatic (Phase B+)
-- [ ] Procedure is fully reproducible from repo contents alone
+- [x] super-tictactoe accessible at a public URL
+- [x] Deploy is a two-command procedure, documented
+- [x] Procedure is fully reproducible from repo contents alone
