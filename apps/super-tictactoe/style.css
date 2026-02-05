@@ -38,6 +38,13 @@
     --color-text-muted: hsl(35, 15%, 50%);
 }
 
+.controls {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    font-family: inherit;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -83,7 +90,7 @@ body {
 .player-panel {
     border-radius: 8px;
     background: var(--color-surface);
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background 0.4s, box-shadow 0.4s;
     width: 48px;
     height: 48px;
     container-type: inline-size;
@@ -137,7 +144,7 @@ body {
     border-left: 1.5cqi solid var(--color-border-light);
     overflow: hidden;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.3s;
     container-type: inline-size;
 }
 
@@ -165,7 +172,7 @@ body {
     height: 72cqi;
     background: var(--color-x);
     border-radius: 99cqi;
-    transition: background 0.2s;
+    transition: background 0.4s;
 }
 [data-mark="X"]::before { transform: rotate(45deg); }
 [data-mark="X"]::after { transform: rotate(-45deg); }
@@ -178,7 +185,7 @@ body {
     height: 38cqi;
     border: 10cqi solid var(--color-o);
     border-radius: 50%;
-    transition: border-color 0.2s;
+    transition: border-color 0.4s;
 }
 
 /* Inactive panel marks use muted color */
@@ -198,7 +205,7 @@ body {
     pointer-events: none;
     border-radius: 4px;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.4s;
     container-type: inline-size;
 }
 

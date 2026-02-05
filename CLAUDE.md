@@ -1,6 +1,7 @@
 --- # workaround: anthropics/claude-code#13003
 depends:
     - skills/llm-collab
+git-caution: personal
 ---
 
 # bukzor.garden — Development Guide

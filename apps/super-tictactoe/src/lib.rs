@@ -1,7 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 use gloo_events::EventListener;
+use gloo_timers::callback::Timeout;
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{Document, Element};
+use web_sys::{Document, Element, HtmlInputElement};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Mark {
@@ -187,6 +188,31 @@ impl Game {
         }
         true
     }
+
+    fn legal_moves(&self) -> Vec<(usize, usize, usize, usize)> {
+        if self.board.outcome != Outcome::InProgress {
+            return Vec::new();
+        }
+        let mut moves = Vec::new();
+        let boards_to_check: Vec<(usize, usize)> = match self.active_sub_board {
+            Some(pos) => vec![pos],
+            None => (0..3).flat_map(|r| (0..3).map(move |c| (r, c))).collect(),
+        };
+        for (mr, mc) in boards_to_check {
+            let sub = &self.board.sub_boards[mr][mc];
+            if sub.outcome != Outcome::InProgress {
+                continue;
+            }
+            for r in 0..3 {
+                for c in 0..3 {
+                    if sub.cells[r][c] == Mark::Empty {
+                        moves.push((mr, mc, r, c));
+                    }
+                }
+            }
+        }
+        moves
+    }
 }
 
 fn render_cell(
@@ -281,11 +307,55 @@ fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) 
     }
 }
 
+struct AutoPlay {
+    x: HtmlInputElement,
+    o: HtmlInputElement,
+    delay: HtmlInputElement,
+}
+
+impl AutoPlay {
+    fn from_document(document: &Document) -> Result<Self, JsValue> {
+        let get_input = |id: &str| -> Result<HtmlInputElement, JsValue> {
+            document
+                .get_element_by_id(id)
+                .ok_or_else(|| JsValue::from_str(&format!("missing #{}", id)))?
+                .dyn_into()
+                .map_err(|_| JsValue::from_str(&format!("#{} is not an input", id)))
+        };
+        Ok(Self {
+            x: get_input("auto-x")?,
+            o: get_input("auto-o")?,
+            delay: get_input("delay")?,
+        })
+    }
+
+    fn is_enabled(&self, mark: Mark) -> bool {
+        match mark {
+            Mark::X => self.x.checked(),
+            Mark::O => self.o.checked(),
+            Mark::Empty => false,
+        }
+    }
+
+    fn delay_ms(&self) -> u32 {
+        self.delay.value().parse().unwrap_or(1500)
+    }
+}
+
+fn find_cell(board_el: &Element, mr: usize, mc: usize, r: usize, c: usize) -> Option<Element> {
+    let selector = format!(
+        ".cell[data-meta-row='{}'][data-meta-col='{}'][data-row='{}'][data-col='{}']",
+        mr, mc, r, c
+    );
+    board_el.query_selector(&selector).ok().flatten()
+}
+
 struct Ui {
     game: RefCell<Game>,
     board_el: Element,
     final_status: Element,
     turn_indicator: Element,
+    auto_play: AutoPlay,
 }
 
 impl Ui {
@@ -317,7 +387,9 @@ impl Ui {
         let board_el = render_board(document, &game.borrow())?;
         body.append_child(&board_el)?;
 
-        Ok(Ui { game, board_el, final_status, turn_indicator })
+        let auto_play = AutoPlay::from_document(document)?;
+
+        Ok(Ui { game, board_el, final_status, turn_indicator, auto_play })
     }
 
     fn update_turn_indicator(turn_indicator: &Element, current_turn: Mark) {
@@ -333,7 +405,52 @@ impl Ui {
         }
     }
 
-    fn handle_click(&self, event: &web_sys::Event) {
+    fn pick_random<T>(items: &[T]) -> Option<&T> {
+        if items.is_empty() {
+            return None;
+        }
+        let idx = (js_sys::Math::random() * items.len() as f64) as usize;
+        items.get(idx.min(items.len() - 1))
+    }
+
+    fn schedule_auto_play(self: &Rc<Self>) {
+        let game = self.game.borrow();
+        let next_turn = game.current_turn;
+        if game.outcome() != Outcome::InProgress || !self.auto_play.is_enabled(next_turn) {
+            return;
+        }
+        let moves = game.legal_moves();
+        let Some(&(mr, mc, r, c)) = Self::pick_random(&moves) else { return };
+        drop(game);
+
+        let delay = self.auto_play.delay_ms();
+        let ui = Rc::clone(self);
+        Timeout::new(delay, move || {
+            if !ui.auto_play.is_enabled(next_turn) {
+                return;
+            }
+            if let Some(cell) = find_cell(&ui.board_el, mr, mc, r, c) {
+                if let Ok(html_el) = cell.dyn_into::<web_sys::HtmlElement>() {
+                    html_el.click();
+                }
+            }
+        })
+        .forget();
+    }
+
+    fn resolve_all_sub_boards(&self) {
+        let children = self.board_el.children();
+        for i in 0..children.length() {
+            let Some(sub) = children.item(i) else { continue };
+            let Ok(Some(status)) = sub.query_selector(".status") else { continue };
+            if !status.has_attribute("data-resolved") {
+                let _ = status.set_attribute("data-resolved", "");
+                let _ = status.remove_attribute("data-constrained");
+            }
+        }
+    }
+
+    fn handle_click(self: &Rc<Self>, event: &web_sys::Event) {
         let Some((el, meta_row, meta_col, row, col)) = cell_from_event(event) else { return };
 
         let mut game = self.game.borrow_mut();
@@ -353,24 +470,24 @@ impl Ui {
                 }
             }
 
-            // Navigate: cell → sub-board → board
-            if let Some(sub_board_el) = el.parent_element() {
-                if let Some(board_el) = sub_board_el.parent_element() {
-                    update_constraints(&board_el, game.active_sub_board);
-                }
-            }
+            update_constraints(&self.board_el, game.active_sub_board);
 
             Self::update_turn_indicator(&self.turn_indicator, game.current_turn);
 
             match game.outcome() {
                 Outcome::Win(mark) => {
                     self.final_status.set_text_content(Some(&format!("{} wins!", mark.symbol())));
+                    self.resolve_all_sub_boards();
                 }
                 Outcome::Draw => {
                     self.final_status.set_text_content(Some("Draw!"));
+                    self.resolve_all_sub_boards();
                 }
                 Outcome::InProgress => {}
             }
+
+            drop(game);
+            self.schedule_auto_play();
         }
     }
 }
@@ -378,7 +495,7 @@ impl Ui {
 #[wasm_bindgen]
 pub struct App {
     ui: Rc<Ui>,
-    _listener: EventListener,
+    _listeners: Vec<EventListener>,
 }
 
 #[wasm_bindgen]
@@ -387,12 +504,25 @@ impl App {
     pub fn new(document: Document) -> Result<App, JsValue> {
         let ui = Rc::new(Ui::new(&document)?);
 
-        let ui_for_listener = Rc::clone(&ui);
-        let listener = EventListener::new(&ui.board_el, "click", move |event| {
-            ui_for_listener.handle_click(event);
+        let ui_click = Rc::clone(&ui);
+        let click_listener = EventListener::new(&ui.board_el, "click", move |event| {
+            ui_click.handle_click(event);
         });
 
-        Ok(App { ui, _listener: listener })
+        let ui_auto_x = Rc::clone(&ui);
+        let auto_x_listener = EventListener::new(&ui.auto_play.x, "change", move |_| {
+            ui_auto_x.schedule_auto_play();
+        });
+
+        let ui_auto_o = Rc::clone(&ui);
+        let auto_o_listener = EventListener::new(&ui.auto_play.o, "change", move |_| {
+            ui_auto_o.schedule_auto_play();
+        });
+
+        Ok(App {
+            ui,
+            _listeners: vec![click_listener, auto_x_listener, auto_o_listener],
+        })
     }
 
     #[wasm_bindgen(getter)]

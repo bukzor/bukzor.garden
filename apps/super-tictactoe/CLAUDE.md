@@ -5,8 +5,6 @@ depends:
 
 # Super Tic-Tac-Toe
 
-**Current state:** Hello-world WASM rendering. No game logic yet.
-
 ## V0 Requirements
 
 - 9x9 board (3x3 meta-grid of 3x3 sub-boards)

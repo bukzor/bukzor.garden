@@ -8,6 +8,11 @@
     <link data-trunk rel="rust" href="." data-wasm-opt="z" />
 </head>
 <body>
+<div class="controls">
+    <label><input type="checkbox" id="auto-x"> Auto X</label>
+    <label><input type="checkbox" id="auto-o"> Auto O</label>
+    <label>Delay: <input type="number" id="delay" value="1500" min="0" max="5000" style="width: 60px">ms</label>
+</div>
 <script type="module">
     addEventListener("TrunkApplicationStarted", () => {
         window.app = new window.wasmBindings.App(document);
