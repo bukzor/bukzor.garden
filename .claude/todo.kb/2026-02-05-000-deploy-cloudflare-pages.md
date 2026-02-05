@@ -17,7 +17,7 @@ fly how far to take it.
 
 Minimum viable deploy. Manual invocation, fully reproducible.
 
-- [ ] Install wrangler: `pnpm add -D wrangler` (repo-pinned, not global)
+- [x] Install wrangler: `pnpm add -D wrangler` (repo-pinned, not global)
 - [ ] Create CF Pages project via `wrangler pages project create`
 - [ ] Write deploy script in `ops/` that:
   - Runs `trunk build --release` in the app directory

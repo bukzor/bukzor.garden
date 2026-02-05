@@ -10,6 +10,9 @@ buck-out/
 pkg/
 *.wasm
 
+# Node
+node_modules/
+
 # IDE
 .idea/
 .vscode/
