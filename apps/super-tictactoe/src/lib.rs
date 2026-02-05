@@ -195,7 +195,6 @@ fn render_cell(
     meta_col: usize,
     row: usize,
     col: usize,
-    mark: Mark,
 ) -> Result<Element, JsValue> {
     let el = document.create_element("div")?;
     el.set_class_name("cell");
@@ -203,7 +202,6 @@ fn render_cell(
     el.set_attribute("data-meta-col", &meta_col.to_string())?;
     el.set_attribute("data-row", &row.to_string())?;
     el.set_attribute("data-col", &col.to_string())?;
-    el.set_text_content(Some(mark.symbol()));
     Ok(el)
 }
 
@@ -219,8 +217,8 @@ fn render_sub_board(
     el.set_attribute("data-meta-col", &meta_col.to_string())?;
 
     for (row, marks) in sub_board.cells.iter().enumerate() {
-        for (col, &mark) in marks.iter().enumerate() {
-            let cell = render_cell(document, meta_row, meta_col, row, col, mark)?;
+        for (col, _) in marks.iter().enumerate() {
+            let cell = render_cell(document, meta_row, meta_col, row, col)?;
             el.append_child(&cell)?;
         }
     }
@@ -301,8 +299,7 @@ impl Ui {
 
         let panel_x = document.create_element("div")?;
         panel_x.set_class_name("player-panel");
-        panel_x.set_attribute("data-player", "X")?;
-        panel_x.set_text_content(Some("X"));
+        panel_x.set_attribute("data-mark", "X")?;
         turn_indicator.append_child(&panel_x)?;
 
         let final_status = document.create_element("div")?;
@@ -311,8 +308,7 @@ impl Ui {
 
         let panel_o = document.create_element("div")?;
         panel_o.set_class_name("player-panel");
-        panel_o.set_attribute("data-player", "O")?;
-        panel_o.set_text_content(Some("O"));
+        panel_o.set_attribute("data-mark", "O")?;
         turn_indicator.append_child(&panel_o)?;
 
         Self::update_turn_indicator(&turn_indicator, game.borrow().current_turn);
@@ -328,7 +324,7 @@ impl Ui {
         let panels = turn_indicator.children();
         for i in 0..panels.length() {
             let Some(panel) = panels.item(i) else { continue };
-            let is_active = panel.get_attribute("data-player").as_deref() == Some(current_turn.symbol());
+            let is_active = panel.get_attribute("data-mark").as_deref() == Some(current_turn.symbol());
             if is_active {
                 let _ = panel.set_attribute("data-active", "");
             } else {
@@ -342,7 +338,8 @@ impl Ui {
 
         let mut game = self.game.borrow_mut();
         if game.play(meta_row, meta_col, row, col) {
-            el.set_text_content(Some(game.board.sub_boards[meta_row][meta_col].cells[row][col].symbol()));
+            let mark = game.board.sub_boards[meta_row][meta_col].cells[row][col];
+            let _ = el.set_attribute("data-mark", mark.symbol());
 
             let sub_outcome = game.board.sub_boards[meta_row][meta_col].outcome;
             if sub_outcome != Outcome::InProgress {
@@ -350,7 +347,7 @@ impl Ui {
                     if let Ok(Some(status_el)) = sub_board_el.query_selector(".status") {
                         let _ = status_el.set_attribute("data-resolved", "");
                         if let Outcome::Win(winner) = sub_outcome {
-                            status_el.set_text_content(Some(winner.symbol()));
+                            let _ = status_el.set_attribute("data-mark", winner.symbol());
                         }
                     }
                 }

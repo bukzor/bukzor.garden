@@ -1,8 +1,53 @@
+/*
+ * Design Rules
+ *
+ * Container Queries:
+ *   - container-type: inline-size on parent = "local coordinate system"
+ *   - Use cqi for all proportional dimensions (size, stroke, radius)
+ *   - Similar-sized containers → identical-looking marks
+ *
+ * Data Attributes:
+ *   - data-mark="X"|"O" everywhere (cells, panels, status)
+ *   - Single selector [data-mark="X"] styles all instances
+ *
+ * CSS Cascade:
+ *   - Equal specificity → source order wins
+ *   - Overrides (like .status) must come after base rules (like [data-mark])
+ *
+ * Colors (HSL):
+ *   - Accents: distinct hues (blue 203°, orange 16°)
+ *   - Neutrals: single hue family (40-45°), vary saturation/lightness
+ *
+ * Geometric Marks:
+ *   - No text content needed; shapes are purely CSS
+ *   - ::before/::after with position: absolute draw shapes
+ *   - Parent needs position: relative (unless already positioned)
+ */
+
+:root {
+    /* Accents: blue and orange, complementary */
+    --color-x: hsl(203, 100%, 45%);
+    --color-o: hsl(16, 87%, 59%);
+
+    /* Neutrals: sepia/gruvbox family (hue 40-45°, golden) */
+    --color-bg: hsl(45, 35%, 85%);
+    --color-surface: hsl(45, 40%, 94%);
+    --color-border: hsl(30, 20%, 25%);
+    --color-border-light: hsl(35, 15%, 40%);
+    --color-text: hsl(30, 25%, 22%);
+    --color-text-muted: hsl(35, 15%, 50%);
+}
+
 body {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: min(20px, 3vw);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    margin: 0;
 }
 
 .turn-indicator {
@@ -17,10 +62,10 @@ body {
 .final-status {
     flex: 1;
     text-align: center;
-    font-family: sans-serif;
     font-size: 24px;
     font-weight: bold;
     min-height: 1.5em;
+    color: var(--color-text);
 }
 
 @media (max-width: 360px) {
@@ -36,19 +81,29 @@ body {
 }
 
 .player-panel {
-    font-family: sans-serif;
-    font-size: 24px;
-    font-weight: bold;
-    padding: 8px 24px;
     border-radius: 8px;
-    background: #eee;
-    color: #999;
-    transition: background 0.2s, color 0.2s;
+    background: var(--color-surface);
+    transition: background 0.2s, box-shadow 0.2s;
+    width: 48px;
+    height: 48px;
+    container-type: inline-size;
 }
 
-.player-panel[data-active] {
-    background: #333;
-    color: #fff;
+.player-panel[data-mark="X"][data-active] {
+    background: var(--color-x);
+    box-shadow: 0 2px 12px hsl(203, 100%, 45%, 0.4);
+}
+.player-panel[data-mark="X"][data-active]::before,
+.player-panel[data-mark="X"][data-active]::after {
+    background: #fff;
+}
+
+.player-panel[data-mark="O"][data-active] {
+    background: var(--color-o);
+    box-shadow: 0 2px 12px hsl(16, 87%, 59%, 0.4);
+}
+.player-panel[data-mark="O"][data-active]::before {
+    border-color: #fff;
 }
 
 .board {
@@ -56,38 +111,20 @@ body {
     grid-template-columns: repeat(3, 1fr);
     width: min(400px, 100%);
     container-type: inline-size;
+    background: var(--color-surface);
+    border-radius: 12px;
+    padding: 2%;
+    box-shadow: 0 4px 24px hsl(40, 30%, 50%, 0.25);
 }
 
 .sub-board {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    border-top: 1.25cqi solid #333;
-    border-left: 1.25cqi solid #333;
+    border-top: 1.25cqi solid var(--color-border);
+    border-left: 1.25cqi solid var(--color-border);
     padding: 5%;
     container-type: inline-size;
-}
-
-.status {
-    position: absolute;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 80px;
-    font-family: sans-serif;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.8);
-    pointer-events: none;
-}
-
-.status[data-resolved] {
-    display: flex;
-}
-
-.status[data-constrained] {
-    display: flex;
-    background: rgba(128, 128, 128, 0.4);
 }
 
 .sub-board[data-meta-row="0"] { border-top: none; }
@@ -96,17 +133,81 @@ body {
 .cell {
     aspect-ratio: 1;
     min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 25cqi;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: #333;
-    border-top: 1.5cqi solid #999;
-    border-left: 1.5cqi solid #999;
+    border-top: 1.5cqi solid var(--color-border-light);
+    border-left: 1.5cqi solid var(--color-border-light);
     overflow: hidden;
+    cursor: pointer;
+    transition: background 0.15s;
+    container-type: inline-size;
+}
+
+.cell:not([data-mark]):hover {
+    background: hsl(45, 35%, 85%);
 }
 
 .cell[data-row="0"] { border-top: none; }
 .cell[data-col="0"] { border-left: none; }
+
+/* CSS shapes for marks */
+[data-mark] {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* X mark: two crossed lines */
+[data-mark="X"]::before,
+[data-mark="X"]::after {
+    content: "";
+    position: absolute;
+    width: 12cqi;
+    height: 72cqi;
+    background: var(--color-x);
+    border-radius: 99cqi;
+    transition: background 0.2s;
+}
+[data-mark="X"]::before { transform: rotate(45deg); }
+[data-mark="X"]::after { transform: rotate(-45deg); }
+
+/* O mark: ring */
+[data-mark="O"]::before {
+    content: "";
+    position: absolute;
+    width: 38cqi;
+    height: 38cqi;
+    border: 10cqi solid var(--color-o);
+    border-radius: 50%;
+    transition: border-color 0.2s;
+}
+
+/* Inactive panel marks use muted color */
+.player-panel:not([data-active])[data-mark="X"]::before,
+.player-panel:not([data-active])[data-mark="X"]::after {
+    background: var(--color-text-muted);
+}
+.player-panel:not([data-active])[data-mark="O"]::before {
+    border-color: var(--color-text-muted);
+}
+
+/* Status overlay (after [data-mark] so position:absolute wins) */
+.status {
+    position: absolute;
+    inset: 0;
+    background: hsl(45, 40%, 94%, 0.92);
+    pointer-events: none;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    container-type: inline-size;
+}
+
+.status[data-resolved] {
+    opacity: 1;
+}
+
+.status[data-constrained] {
+    opacity: 1;
+    background: hsl(40, 20%, 45%, 0.35);
+}
+
