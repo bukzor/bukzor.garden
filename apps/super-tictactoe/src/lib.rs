@@ -287,6 +287,7 @@ struct Ui {
     game: RefCell<Game>,
     board_el: Element,
     final_status: Element,
+    turn_indicator: Element,
 }
 
 impl Ui {
@@ -295,14 +296,45 @@ impl Ui {
 
         let game = RefCell::new(Game::new());
 
+        let turn_indicator = document.create_element("div")?;
+        turn_indicator.set_class_name("turn-indicator");
+
+        let panel_x = document.create_element("div")?;
+        panel_x.set_class_name("player-panel");
+        panel_x.set_attribute("data-player", "X")?;
+        panel_x.set_text_content(Some("X"));
+        turn_indicator.append_child(&panel_x)?;
+
         let final_status = document.create_element("div")?;
         final_status.set_class_name("final-status");
-        body.append_child(&final_status)?;
+        turn_indicator.append_child(&final_status)?;
+
+        let panel_o = document.create_element("div")?;
+        panel_o.set_class_name("player-panel");
+        panel_o.set_attribute("data-player", "O")?;
+        panel_o.set_text_content(Some("O"));
+        turn_indicator.append_child(&panel_o)?;
+
+        Self::update_turn_indicator(&turn_indicator, game.borrow().current_turn);
+        body.append_child(&turn_indicator)?;
 
         let board_el = render_board(document, &game.borrow())?;
         body.append_child(&board_el)?;
 
-        Ok(Ui { game, board_el, final_status })
+        Ok(Ui { game, board_el, final_status, turn_indicator })
+    }
+
+    fn update_turn_indicator(turn_indicator: &Element, current_turn: Mark) {
+        let panels = turn_indicator.children();
+        for i in 0..panels.length() {
+            let Some(panel) = panels.item(i) else { continue };
+            let is_active = panel.get_attribute("data-player").as_deref() == Some(current_turn.symbol());
+            if is_active {
+                let _ = panel.set_attribute("data-active", "");
+            } else {
+                let _ = panel.remove_attribute("data-active");
+            }
+        }
     }
 
     fn handle_click(&self, event: &web_sys::Event) {
@@ -330,6 +362,8 @@ impl Ui {
                     update_constraints(&board_el, game.active_sub_board);
                 }
             }
+
+            Self::update_turn_indicator(&self.turn_indicator, game.current_turn);
 
             match game.outcome() {
                 Outcome::Win(mark) => {
