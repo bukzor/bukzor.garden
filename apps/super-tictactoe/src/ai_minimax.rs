@@ -189,7 +189,7 @@ mod tests {
             .subboard_won_by(6, Mark::O)
             .subboard_won_by(7, Mark::O)
             .turn(Mark::X)
-            .constraint(Some(2))  // Must play in board 2
+            .constraint((0, 2))  // Must play in board 2
             .build();
 
         let chosen = pick_best(&game);
@@ -207,7 +207,7 @@ mod tests {
             .cell(2, 0, Mark::O)
             .cell(2, 1, Mark::O)
             .turn(Mark::X)
-            .constraint(Some(2))
+            .constraint((0, 2))
             .build();
 
         let chosen = pick_best(&game);
@@ -221,7 +221,7 @@ mod tests {
             .cell(3, 0, Mark::X)
             .cell(3, 1, Mark::X)
             .turn(Mark::X)
-            .constraint(Some(3))
+            .constraint((1, 0))
             .build();
 
         let chosen = pick_best(&game);
@@ -240,7 +240,7 @@ mod tests {
             // Alternative: X also has diagonal progress
             .subboard_won_by(4, Mark::X)
             .turn(Mark::X)
-            .constraint(Some(2))
+            .constraint((0, 2))
             .build();
 
         let chosen = pick_best(&game);
@@ -269,7 +269,7 @@ mod tests {
         let game = GameBuilder::new()
             .cell(0, 0, Mark::X)
             .turn(Mark::X)
-            .constraint(Some(0))
+            .constraint((0, 0))
             .build();
 
         // At depth 1, might pick anything
@@ -299,7 +299,7 @@ mod tests {
         let game = GameBuilder::new()
             .cell(4, 4, Mark::X)
             .turn(Mark::O)
-            .constraint(Some(4))
+            .constraint((1, 1))
             .build();
         let chosen = pick_best(&game);
         assert_eq!(chosen.board, BoardPos::from((1, 1)));  // Must play in board 4
@@ -312,7 +312,7 @@ mod tests {
         let game = GameBuilder::new()
             .subboard_won_by(4, Mark::X)
             .turn(Mark::O)
-            .constraint(None)  // Board 4 is resolved, free choice
+            .unconstrained()  // Board 4 is resolved, free choice
             .build();
 
         let chosen = pick_best(&game);
@@ -350,7 +350,7 @@ mod tests {
             .subboard_won_by(6, Mark::O)
             .subboard_won_by(7, Mark::O)
             .turn(Mark::X)
-            .constraint(Some(2))
+            .constraint((0, 2))
             .build();
 
         let chosen = pick_move_with_strength(&game, 1.0);
@@ -367,7 +367,7 @@ mod tests {
             .subboard_won_by(6, Mark::O)
             .subboard_won_by(7, Mark::O)
             .turn(Mark::X)
-            .constraint(Some(2))
+            .constraint((0, 2))
             .build();
 
         let optimal = ((0, 2), (0, 2)).into();
@@ -417,7 +417,7 @@ mod tests {
             .subboard_won_by(6, Mark::O)
             .subboard_won_by(7, Mark::X)
             .turn(Mark::O)
-            .constraint(Some(4))  // Must play in board 4
+            .constraint((1, 1))  // Must play in board 4
             .build();
 
         let start = Instant::now();

@@ -1,6 +1,6 @@
 <anthropic-skill-ownership llm-subtask />
 
-- [ ] GameBuilder: use `BoardPos`/`CellPos` instead of flat indices (0-8)
+- [x] GameBuilder: use `BoardPos`/`CellPos` instead of flat indices (0-8)
 
 - [ ] V0 milestones
   - [x] Deploy — [Phase A complete](../../.claude/todo.kb/2026-02-05-000-deploy-cloudflare-pages.md), live at `bukzor-garden--super-tictactoe.pages.dev`

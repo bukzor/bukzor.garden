@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn game_frees_constraint_when_target_resolved() {
         let mut g = GameBuilder::new()
-            .subboard_won_by(0, Mark::X)
+            .subboard_won_by((0, 0), Mark::X)
             .build();
         // Play into cell (0,0) of sub-board (1,1) → target is (0,0) which is resolved
         g.play(((1, 1), (0, 0)));
@@ -439,8 +439,8 @@ mod tests {
     #[test]
     fn legal_moves_skips_resolved_boards() {
         let g = GameBuilder::new()
-            .subboard_won_by(4, Mark::X)  // board index 4 = (1,1)
-            .constraint(None)
+            .subboard_won_by((1, 1), Mark::X)
+            .unconstrained()
             .build();
         let moves = g.legal_moves();
         assert!(moves.iter().all(|m| m.board != (1, 1).into()));
@@ -450,9 +450,9 @@ mod tests {
     fn legal_moves_empty_after_game_over() {
         // X wins top row of meta-board
         let g = GameBuilder::new()
-            .subboard_won_by(0, Mark::X)
-            .subboard_won_by(1, Mark::X)
-            .subboard_won_by(2, Mark::X)
+            .subboard_won_by((0, 0), Mark::X)
+            .subboard_won_by((0, 1), Mark::X)
+            .subboard_won_by((0, 2), Mark::X)
             .build();
         assert!(g.legal_moves().is_empty());
     }
@@ -463,12 +463,12 @@ mod tests {
     fn game_detects_meta_row_win() {
         // Pre-win two sub-boards, set up third for winning move
         let mut g = GameBuilder::new()
-            .subboard_won_by(0, Mark::X)
-            .subboard_won_by(1, Mark::X)
-            .cell(2, 0, Mark::X)  // board 2, cells 0 and 1
-            .cell(2, 1, Mark::X)
+            .subboard_won_by((0, 0), Mark::X)
+            .subboard_won_by((0, 1), Mark::X)
+            .cell((0, 2), (0, 0), Mark::X)
+            .cell((0, 2), (0, 1), Mark::X)
             .turn(Mark::X)
-            .constraint(Some(2))
+            .constraint((0, 2))
             .build();
         g.play(((0, 2), (0, 2))); // X completes row in sub-board (0,2)
         assert_eq!(g.outcome(), Outcome::Win(Mark::X));
