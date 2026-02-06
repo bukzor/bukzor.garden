@@ -4,18 +4,34 @@
 
 use crate::game::{count_corners, count_threats, Game, Mark, Move, Outcome};
 
-/// Score type: (terminal, threats_diff, corners_diff).
+/// Score type: (terminal, threats, corners).
 /// Lexicographic ordering: terminal always dominates.
-pub type Score = (i32, i32, i32);
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub struct Score {
+    pub terminal: i32,
+    pub threats: i32,
+    pub corners: i32,
+}
+
+impl std::ops::Neg for Score {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Score {
+            terminal: -self.terminal,
+            threats: -self.threats,
+            corners: -self.corners,
+        }
+    }
+}
 
 /// Win score (terminal component = 10, others zeroed)
-pub const SCORE_WIN: Score = (10, 0, 0);
+pub const SCORE_WIN: Score = Score { terminal: 10, threats: 0, corners: 0 };
 
 /// Loss score
-pub const SCORE_LOSS: Score = (-10, 0, 0);
+pub const SCORE_LOSS: Score = Score { terminal: -10, threats: 0, corners: 0 };
 
 /// Draw score (slightly worse than continuing)
-pub const SCORE_DRAW: Score = (-1, 0, 0);
+pub const SCORE_DRAW: Score = Score { terminal: -1, threats: 0, corners: 0 };
 
 /// Evaluate a position from the perspective of `player`.
 ///
@@ -41,13 +57,13 @@ pub fn evaluate(game: &Game, player: Mark) -> Score {
         _ => None,
     };
 
-    let threats = count_threats(&game.board.sub_boards, to_mark);
-    let corners = count_corners(&game.board.sub_boards, to_mark);
+    let threat_counts = count_threats(&game.board.sub_boards, to_mark);
+    let corner_counts = count_corners(&game.board.sub_boards, to_mark);
 
-    let threats_diff = threats[player] as i32 - threats[opponent] as i32;
-    let corners_diff = corners[player] as i32 - corners[opponent] as i32;
+    let threats = threat_counts[player] as i32 - threat_counts[opponent] as i32;
+    let corners = corner_counts[player] as i32 - corner_counts[opponent] as i32;
 
-    (0, threats_diff, corners_diff)
+    Score { terminal: 0, threats, corners }
 }
 
 /// Pick the best move for the current player using minimax with alpha-beta pruning.
@@ -185,8 +201,8 @@ mod tests {
 
         let x_score = evaluate(&game, Mark::X);
         let o_score = evaluate(&game, Mark::O);
-        // Negate each component for symmetry check
-        assert_eq!(x_score, (-o_score.0, -o_score.1, -o_score.2));
+        // Scores should be negations of each other
+        assert_eq!(x_score, -o_score);
     }
 
     #[test]
