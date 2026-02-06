@@ -62,19 +62,23 @@ fn render_board(document: &Document, game: &Game) -> Result<Element, wasm_bindge
     Ok(board_el)
 }
 
-fn cell_from_event(event: &web_sys::Event) -> Option<(Element, usize, usize, usize, usize)> {
+fn cell_from_event(event: &web_sys::Event) -> Option<(Element, Move)> {
     let el = event.target()?.dyn_ref::<Element>()?.clone();
     if !el.class_list().contains("cell") {
         return None;
     }
-    let meta_row = el.get_attribute("data-meta-row")?.parse().ok()?;
-    let meta_col = el.get_attribute("data-meta-col")?.parse().ok()?;
-    let row = el.get_attribute("data-row")?.parse().ok()?;
-    let col = el.get_attribute("data-col")?.parse().ok()?;
-    Some((el, meta_row, meta_col, row, col))
+    let board = BoardPos {
+        row: el.get_attribute("data-meta-row")?.parse().ok()?,
+        col: el.get_attribute("data-meta-col")?.parse().ok()?,
+    };
+    let cell = CellPos {
+        row: el.get_attribute("data-row")?.parse().ok()?,
+        col: el.get_attribute("data-col")?.parse().ok()?,
+    };
+    Some((el, Move { board, cell }))
 }
 
-fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) {
+fn update_constraints(board_el: &Element, active_board: Option<BoardPos>) {
     let children = board_el.children();
     for i in 0..children.length() {
         let Some(sub) = children.item(i) else { continue };
@@ -85,11 +89,13 @@ fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) 
             continue;
         }
 
-        let mr: usize = sub.get_attribute("data-meta-row").and_then(|s: String| s.parse().ok()).unwrap_or(99);
-        let mc: usize = sub.get_attribute("data-meta-col").and_then(|s: String| s.parse().ok()).unwrap_or(99);
+        let pos = BoardPos {
+            row: sub.get_attribute("data-meta-row").and_then(|s: String| s.parse().ok()).unwrap_or(99),
+            col: sub.get_attribute("data-meta-col").and_then(|s: String| s.parse().ok()).unwrap_or(99),
+        };
 
         match active_board {
-            Some((ar, ac)) if (mr, mc) != (ar, ac) => {
+            Some(active) if pos != active => {
                 let _ = status.set_attribute("data-constrained", "");
             }
             _ => {
@@ -99,10 +105,10 @@ fn update_constraints(board_el: &Element, active_board: Option<(usize, usize)>) 
     }
 }
 
-fn find_cell(board_el: &Element, mr: usize, mc: usize, r: usize, c: usize) -> Option<Element> {
+fn find_cell(board_el: &Element, mov: Move) -> Option<Element> {
     let selector = format!(
         ".cell[data-meta-row='{}'][data-meta-col='{}'][data-row='{}'][data-col='{}']",
-        mr, mc, r, c
+        mov.board.row, mov.board.col, mov.cell.row, mov.cell.col
     );
     board_el.query_selector(&selector).ok().flatten()
 }
@@ -204,7 +210,7 @@ impl Ui {
             return;
         }
         let moves = game.legal_moves();
-        let Some(&(mr, mc, r, c)) = ai_random::pick_random(&moves) else { return };
+        let Some(&mov) = ai_random::pick_random(&moves) else { return };
         drop(game);
 
         let delay = self.auto_play.delay_ms();
@@ -213,7 +219,7 @@ impl Ui {
             if !ui.auto_play.is_enabled(next_turn) {
                 return;
             }
-            if let Some(cell) = find_cell(&ui.board_el, mr, mc, r, c) {
+            if let Some(cell) = find_cell(&ui.board_el, mov) {
                 if let Ok(html_el) = cell.dyn_into::<web_sys::HtmlElement>() {
                     html_el.click();
                 }
@@ -235,19 +241,19 @@ impl Ui {
     }
 
     pub fn handle_click(self: &Rc<Self>, event: &web_sys::Event) {
-        let Some((el, meta_row, meta_col, row, col)) = cell_from_event(event) else { return };
+        let Some((el, mov)) = cell_from_event(event) else { return };
 
         let mut game = self.game.borrow_mut();
-        if game.play(meta_row, meta_col, row, col) {
-            let mark = game.board.sub_boards[meta_row][meta_col].cells[row][col];
+        if game.play(mov) {
+            let sub = &game.board.sub_boards[mov.board.row][mov.board.col];
+            let mark = sub.cells[mov.cell.row][mov.cell.col];
             let _ = el.set_attribute("data-mark", mark.symbol());
 
-            let sub_outcome = game.board.sub_boards[meta_row][meta_col].outcome;
-            if sub_outcome != Outcome::InProgress {
+            if sub.outcome != Outcome::InProgress {
                 if let Some(sub_board_el) = el.parent_element() {
                     if let Ok(Some(status_el)) = sub_board_el.query_selector(".status") {
                         let _ = status_el.set_attribute("data-resolved", "");
-                        if let Outcome::Win(winner) = sub_outcome {
+                        if let Outcome::Win(winner) = sub.outcome {
                             let _ = status_el.set_attribute("data-mark", winner.symbol());
                         }
                     }
