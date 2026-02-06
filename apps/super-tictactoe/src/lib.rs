@@ -8,6 +8,9 @@ pub mod ai_random;
 pub mod game;
 pub mod ui;
 
+#[cfg(test)]
+mod game_builder;
+
 use ui::Ui;
 
 #[wasm_bindgen]
