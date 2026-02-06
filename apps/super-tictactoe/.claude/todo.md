@@ -23,7 +23,7 @@
       - [ ] Add `pick_best(game) -> Move`
         - Calls search, random pick among moves with equal best score
       - [ ] Wire ai_minimax into lib.rs
-        - Delete existing draft (src/ai_minimax.rs has stale test sketches)
+        - src/ai_minimax.rs has test specs ready; implement the `todo!()` stubs
       - [ ] Integration — replace pick_random in auto-play
     - [ ] Difficulty slider — smooth adjustment between random and optimal play
   - [ ] Support button — "$0.50/mo" external checkout
