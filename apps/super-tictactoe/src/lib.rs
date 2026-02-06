@@ -4,6 +4,7 @@ use gloo_events::EventListener;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
 
+pub mod ai_minimax;
 pub mod ai_random;
 pub mod game;
 pub mod ui;

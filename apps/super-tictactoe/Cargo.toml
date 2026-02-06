@@ -7,6 +7,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
+enum-map = "2.7.3"
 gloo-events = "0.2"
 gloo-timers = "0.3"
 js-sys = "0.3"

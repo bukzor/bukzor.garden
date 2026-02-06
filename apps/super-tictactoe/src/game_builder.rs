@@ -2,7 +2,7 @@
 //!
 //! Allows bypassing normal play rules to set up specific positions for testing.
 
-use crate::game::{BoardPos, CellPos, Game, Mark, Outcome};
+use crate::game::{BoardPos, CellPos, Game, Mark};
 
 /// Builder for constructing test game states.
 pub struct GameBuilder {
@@ -74,6 +74,7 @@ impl GameBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::game::Outcome;
     use std::collections::HashSet;
 
     // =========================================================================

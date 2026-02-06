@@ -1,3 +1,6 @@
+/// A 3x3 grid of elements. Used for both sub-boards (cells) and the meta-board (sub-boards).
+pub type Grid<T> = [[T; 3]; 3];
+
 /// Position in the 3x3 meta-grid of sub-boards.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct BoardPos {
@@ -43,7 +46,7 @@ impl From<((usize, usize), (usize, usize))> for Move {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, enum_map::Enum)]
 pub enum Mark {
     Empty,
     X,
@@ -97,7 +100,7 @@ const fn winning_lines() -> [[(usize, usize); 3]; 8] {
 pub const WINNING_LINES: [[(usize, usize); 3]; 8] = winning_lines();
 
 pub fn check_winner<T: Copy + PartialEq>(
-    grid: &[[T; 3]; 3],
+    grid: &Grid<T>,
     to_mark: impl Fn(T) -> Option<Mark>,
 ) -> Option<Mark> {
     for line in WINNING_LINES {
@@ -109,9 +112,54 @@ pub fn check_winner<T: Copy + PartialEq>(
     None
 }
 
+/// Corner positions in a 3x3 grid.
+pub const CORNERS: [(usize, usize); 4] = [(0, 0), (0, 2), (2, 0), (2, 2)];
+
+/// Count how many corners each player controls.
+pub fn count_corners<T: Copy>(
+    grid: &Grid<T>,
+    to_mark: impl Fn(T) -> Option<Mark>,
+) -> enum_map::EnumMap<Mark, usize> {
+    let mut counts = enum_map::EnumMap::default();
+    for (r, c) in CORNERS {
+        if let Some(mark) = to_mark(grid[r][c]) {
+            counts[mark] += 1;
+        }
+    }
+    counts
+}
+
+/// Count threats (2-in-a-row with empty third cell) for each player.
+pub fn count_threats<T: Copy>(
+    grid: &Grid<T>,
+    to_mark: impl Fn(T) -> Option<Mark>,
+) -> enum_map::EnumMap<Mark, usize> {
+    let mut counts = enum_map::EnumMap::default();
+    for line in WINNING_LINES {
+        let marks: [Option<Mark>; 3] = line.map(|(r, c)| to_mark(grid[r][c]));
+        let (mut x_count, mut o_count, mut empty_count) = (0, 0, 0);
+        for m in marks {
+            match m {
+                Some(Mark::X) => x_count += 1,
+                Some(Mark::O) => o_count += 1,
+                Some(Mark::Empty) | None => empty_count += 1,
+            }
+        }
+        // A threat is exactly 2 of one mark and 1 empty
+        if empty_count == 1 {
+            if x_count == 2 {
+                counts[Mark::X] += 1;
+            } else if o_count == 2 {
+                counts[Mark::O] += 1;
+            }
+        }
+    }
+    counts
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct SubBoard {
-    pub cells: [[Mark; 3]; 3],
+    pub cells: Grid<Mark>,
 }
 
 impl SubBoard {
@@ -153,7 +201,7 @@ impl SubBoard {
 }
 
 pub struct Board {
-    pub sub_boards: [[SubBoard; 3]; 3],
+    pub sub_boards: Grid<SubBoard>,
 }
 
 impl Board {
