@@ -153,11 +153,15 @@ impl Game {
         }
     }
 
-    pub fn check_winner(&self) -> Option<Mark> {
+    pub fn winner(&self) -> Option<Mark> {
         check_winner(&self.board.sub_boards, |sb| match sb.outcome {
             Outcome::Win(mark) => Some(mark),
             _ => None,
         })
+    }
+
+    pub fn sub_board(&self, pos: BoardPos) -> &SubBoard {
+        &self.board.sub_boards[pos.row][pos.col]
     }
 
     pub fn is_full(&self) -> bool {
@@ -184,7 +188,7 @@ impl Game {
         if !sub_board.play(mov.cell, self.current_turn) {
             return false;
         }
-        if let Some(winner) = self.check_winner() {
+        if let Some(winner) = self.winner() {
             self.board.outcome = Outcome::Win(winner);
             self.current_turn = Mark::Empty;
             self.active_sub_board = None;
@@ -195,7 +199,7 @@ impl Game {
         } else {
             self.current_turn = self.current_turn.next();
             let target_board = BoardPos { row: mov.cell.row, col: mov.cell.col };
-            let target = &self.board.sub_boards[target_board.row][target_board.col];
+            let target = self.sub_board(target_board);
             self.active_sub_board = if target.outcome == Outcome::InProgress {
                 Some(target_board)
             } else {
@@ -217,7 +221,7 @@ impl Game {
                 .collect(),
         };
         for board in boards_to_check {
-            let sub = &self.board.sub_boards[board.row][board.col];
+            let sub = self.sub_board(board);
             if sub.outcome != Outcome::InProgress {
                 continue;
             }

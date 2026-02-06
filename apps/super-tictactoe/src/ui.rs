@@ -245,7 +245,7 @@ impl Ui {
 
         let mut game = self.game.borrow_mut();
         if game.play(mov) {
-            let sub = &game.board.sub_boards[mov.board.row][mov.board.col];
+            let sub = game.sub_board(mov.board);
             let mark = sub.cells[mov.cell.row][mov.cell.col];
             let _ = el.set_attribute("data-mark", mark.symbol());
 
