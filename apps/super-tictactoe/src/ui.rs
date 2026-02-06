@@ -249,11 +249,11 @@ impl Ui {
             let mark = sub.cells[mov.cell.row][mov.cell.col];
             let _ = el.set_attribute("data-mark", mark.symbol());
 
-            if sub.outcome != Outcome::InProgress {
+            if sub.outcome() != Outcome::InProgress {
                 if let Some(sub_board_el) = el.parent_element() {
                     if let Ok(Some(status_el)) = sub_board_el.query_selector(".status") {
                         let _ = status_el.set_attribute("data-resolved", "");
-                        if let Outcome::Win(winner) = sub.outcome {
+                        if let Outcome::Win(winner) = sub.outcome() {
                             let _ = status_el.set_attribute("data-mark", winner.symbol());
                         }
                     }

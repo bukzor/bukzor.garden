@@ -38,11 +38,10 @@ impl GameBuilder {
     pub fn subboard_won_by(mut self, board: usize, mark: Mark) -> Self {
         let bp = board_pos(board);
         let sub = &mut self.game.board.sub_boards[bp.row][bp.col];
-        // Fill top row with winning marks
+        // Fill top row with winning marks (outcome computed from cells)
         sub.cells[0][0] = mark;
         sub.cells[0][1] = mark;
         sub.cells[0][2] = mark;
-        sub.outcome = Outcome::Win(mark);
         self
     }
 
@@ -50,14 +49,13 @@ impl GameBuilder {
     pub fn subboard_drawn(mut self, board: usize) -> Self {
         let bp = board_pos(board);
         let sub = &mut self.game.board.sub_boards[bp.row][bp.col];
-        // Fill with a draw pattern:
+        // Fill with a draw pattern (outcome computed from cells):
         // X O X
         // X X O
         // O X O
         sub.cells[0] = [Mark::X, Mark::O, Mark::X];
         sub.cells[1] = [Mark::X, Mark::X, Mark::O];
         sub.cells[2] = [Mark::O, Mark::X, Mark::O];
-        sub.outcome = Outcome::Draw;
         self
     }
 
@@ -95,7 +93,7 @@ mod tests {
     }
 
     fn get_subboard_outcome(game: &Game, board: usize) -> Outcome {
-        game.sub_board(board_pos(board)).outcome
+        game.sub_board(board_pos(board)).outcome()
     }
 
     fn subboard_winner(game: &Game, board: usize) -> Option<Mark> {
