@@ -5,9 +5,25 @@
   - [ ] Theme selector — one vanity SKU (e.g. X/O colors)
   - [ ] AI opponent — minimax
     - [x] Auto-play checkboxes (test harness)
-    - [ ] Smarter AI — minimax or similar
-      - [ ] Board evaluation heuristic — score non-terminal positions
-      - [ ] Minimax with alpha-beta pruning + depth limit
+    - [ ] Smarter AI — minimax ([design rationale](../../docs/dev/devlog/2026-02-06-000-minimax-ai-design.md))
+      - [ ] Add `enum_map` crate + derive `Enum` on `Mark`
+      - [ ] Add `Grid<T>` typedef (`[[T; 3]; 3]`), update SubBoard/Board/check_winner
+      - [ ] Add `count_corners(grid, to_mark) -> EnumMap<Mark, usize>`
+        - Same pattern as `check_winner`: generic over Grid<T> with `to_mark: Fn(T) -> Option<Mark>`
+        - Corner positions: 0, 2, 6, 8
+      - [ ] Add `count_threats(grid, to_mark) -> EnumMap<Mark, usize>`
+        - 2-in-a-row with empty third cell (on any winning line)
+      - [ ] Add `Score` tuple + `score()` in ai_minimax.rs
+        - `type Score = (i32, i32, i32)` — (terminal, threats_diff, corners_diff)
+        - Lexicographic ordering: terminal always dominates
+        - WIN=(10,0,0), LOSS=(-10,0,0), DRAW=(-1,0,0)
+        - Non-terminal: (0, my_threats - their_threats, my_corners - their_corners)
+      - [ ] Add `search(game, depth, α, β, maximizing, player) -> Score`
+        - Alpha-beta pruning, calls score() at leaves/depth=0
+      - [ ] Add `pick_best(game) -> Move`
+        - Calls search, random pick among moves with equal best score
+      - [ ] Wire ai_minimax into lib.rs
+        - Delete existing draft (src/ai_minimax.rs has stale test sketches)
       - [ ] Integration — replace pick_random in auto-play
     - [ ] Difficulty slider — smooth adjustment between random and optimal play
   - [ ] Support button — "$0.50/mo" external checkout
