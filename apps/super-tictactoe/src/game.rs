@@ -2,7 +2,7 @@
 pub type Grid<T> = [[T; 3]; 3];
 
 /// Position in the 3x3 meta-grid of sub-boards.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize)]
 pub struct BoardPos {
     pub row: usize,
     pub col: usize,
@@ -15,7 +15,7 @@ impl From<(usize, usize)> for BoardPos {
 }
 
 /// Position within a 3x3 sub-board.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize)]
 pub struct CellPos {
     pub row: usize,
     pub col: usize,
@@ -28,7 +28,7 @@ impl From<(usize, usize)> for CellPos {
 }
 
 /// A move: which sub-board and which cell within it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize)]
 pub struct Move {
     pub board: BoardPos,
     pub cell: CellPos,
@@ -46,7 +46,7 @@ impl From<((usize, usize), (usize, usize))> for Move {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, enum_map::Enum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, enum_map::Enum, serde::Serialize)]
 pub enum Mark {
     Empty,
     X,
@@ -71,7 +71,18 @@ impl Mark {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+impl std::ops::Neg for Mark {
+    type Output = Self;
+    fn neg(self) -> Self {
+        match self {
+            Mark::X => Mark::O,
+            Mark::O => Mark::X,
+            Mark::Empty => Mark::Empty,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize)]
 pub enum Outcome {
     InProgress,
     Win(Mark),
@@ -157,7 +168,7 @@ pub fn count_threats<T: Copy>(
     counts
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SubBoard {
     pub cells: Grid<Mark>,
 }
@@ -200,6 +211,7 @@ impl SubBoard {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Board {
     pub sub_boards: Grid<SubBoard>,
 }
@@ -212,6 +224,7 @@ impl Board {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Game {
     pub board: Board,
     pub current_turn: Mark,
@@ -285,6 +298,13 @@ impl Game {
             };
         }
         true
+    }
+
+    /// Clone this game, apply the move, and return the new state.
+    pub fn after(&self, mov: impl Into<Move>) -> Self {
+        let mut after = self.clone();
+        after.play(mov);
+        after
     }
 
     pub fn legal_moves(&self) -> Vec<Move> {

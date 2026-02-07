@@ -6,6 +6,7 @@ use web_sys::Document;
 
 pub mod ai_minimax;
 pub mod ai_random;
+pub mod bounded_queue;
 pub mod game;
 pub mod ui;
 
