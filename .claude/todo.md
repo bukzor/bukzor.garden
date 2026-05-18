@@ -1,4 +1,6 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+---
 
 - [x] WASM hello-world for super-tictactoe
 - [ ] Super Tic-Tac-Toe V0 — see `apps/super-tictactoe/.claude/todo.md`

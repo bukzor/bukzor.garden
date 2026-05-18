@@ -1,4 +1,6 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+---
 
 - [x] GameBuilder: use `BoardPos`/`CellPos` instead of flat indices (0-8)
 

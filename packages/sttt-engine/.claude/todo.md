@@ -1,5 +1,5 @@
 ---
-anthropic-skill-ownership: llm-subtask
+managed-by: Skill(llm-subtask)
 ---
 
 - [ ] Define core types (Mark, Board, Game)

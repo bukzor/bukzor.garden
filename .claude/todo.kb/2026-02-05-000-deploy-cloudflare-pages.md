@@ -1,4 +1,6 @@
-<anthropic-skill-ownership llm-subtask />
+---
+managed-by: Skill(llm-subtask)
+---
 
 # Deploy to Cloudflare Pages
 
