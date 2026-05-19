@@ -1,5 +1,31 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 8.0
+    rationale: |
+      Full migration across 4 phases (bootstrap, Worm, TTT port,
+      cleanup). File itself says "if Buck2 setup takes more than a day,
+      pause and reassess" — Phase 1 alone is the timebox-trigger point.
+      Total scope ~8 SWEh if all phases land.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.0
+    rationale: |
+      Explicitly deferred: "Priority: Low (deferred until after V0)."
+      Doing this work in the 2w window violates the file's own
+      "products before infrastructure" principle and the constitution's
+      "easy to disappear for 18 months building tooling" warning.
+      Forward value: zero (or negative) until V0 ships.
+    confidence: confident
+  cost-of-delay-2w:
+    "@value": 0.0
+    rationale: |
+      Zero by design. The deferral is a strategic choice, not an
+      oversight. Buck2 / Trunk ecosystem evolves slowly — no decay
+      tax for waiting 2-12 more weeks. Triggered only after the
+      second game ships, per the file's Phase 1-3 sequencing.
+    confidence: confident
 ---
 
 # Trunk to Buck2 Migration
