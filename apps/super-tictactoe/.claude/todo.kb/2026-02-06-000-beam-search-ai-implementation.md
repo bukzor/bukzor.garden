@@ -1,5 +1,31 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 4.0
+    rationale: |
+      Most heavy lifting already done (beam search working, 4500
+      expansions/sec, tactical tests pass). Remaining: ~1h heuristic
+      tuning, ~1h hash-game-only optimization, ~1h UI wire-in (replace
+      random AI), ~1h test-expectation cleanup. im::Vector exploration
+      is optional/research-grade.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Tuning + UI wire-in within 2w would put a smart AI in front of
+      the player — visible payoff. Modest value as hobby/learning;
+      ~0.5 SWEh-equivalent.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.3
+    rationale: |
+      Low. The work is paused at a near-shippable point (heuristics
+      need tuning, UI not wired). Each 2w of delay risks context decay
+      on the beam-search architecture details (lexicographic-path
+      reasoning, BoundedQueue invariants) — non-trivial to re-load.
+      ~0.3 SWEh per window.
+    confidence: tentative
 ---
 
 # Beam Search AI Implementation

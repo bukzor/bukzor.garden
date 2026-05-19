@@ -1,5 +1,32 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 8.0
+    rationale: |
+      V0 milestone scope: ~5h minimax (search + pick_best + integration
+      + difficulty slider), ~1h theme selector, ~2h support button
+      (research + setup + wire), ~0.5h GHA auto-deploy. Wall-clock
+      months per session-note framing; effort hours ~8.
+    confidence: tentative
+  benefit-2w:
+    "@value": 1.0
+    rationale: |
+      Hobby/learning project. Realistic 2w landing: minimax search()
+      + pick_best() + integration if user puts in a focused sprint.
+      Value is craft/satisfaction + experiment-completeness rather
+      than dollar yield. ~1 SWEh-equivalent of forward value.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.5
+    rationale: |
+      Low. No external deadline, no money flow. $0.50/mo support
+      button at notional 10 supporters would be $1.25/2w forgone
+      (~0.01 SWEh — negligible). Real cost is momentum/context decay
+      on multi-month pauses and forgone learning velocity.
+      Counter-pressure: hobby projects shouldn't outrank revenue
+      paths in WSJF; 0.5 nets a reasonable floor.
+    confidence: tentative
 ---
 
 - [x] GameBuilder: use `BoardPos`/`CellPos` instead of flat indices (0-8)
