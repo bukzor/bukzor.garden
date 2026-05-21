@@ -1,5 +1,24 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 2.0
+    rationale: |
+      Parent index. Child items (Super TTT, Cloudflare Pages, Trunk-
+      to-Buck2) rated separately. Residual inline: revisit app file
+      layout (~0.5h), create public bukzor-llc repo (~1.5h).
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.3
+    rationale: |
+      Cleanup items. Modest forward value.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.0
+    rationale: |
+      Layout revisit is cosmetic. Public bukzor-llc repo is a
+      strategic move with no per-2w bleed.
+    confidence: tentative
 ---
 
 - [x] WASM hello-world for super-tictactoe

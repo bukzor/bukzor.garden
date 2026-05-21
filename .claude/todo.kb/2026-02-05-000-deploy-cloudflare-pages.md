@@ -1,5 +1,28 @@
 ---
 managed-by: Skill(llm-subtask)
+cost-benefit-sweh:
+  timebox:
+    "@value": 3.0
+    rationale: |
+      Phase A (manual wrangler) done. Phase B (GitHub Actions auto-
+      deploy) ~1.5h. Phase C (Pulumi infra) ~1.5h, optional. Decide
+      on the fly how far to go.
+    confidence: tentative
+  benefit-2w:
+    "@value": 0.5
+    rationale: |
+      Once auto-deploy lands: every push ships. Multiplier on
+      super-tictactoe iteration speed. ~$50 of "no manual deploy
+      friction" in window.
+    confidence: tentative
+  cost-of-delay-2w:
+    "@value": 0.1
+    rationale: |
+      Phase A works manually; nothing's blocked by deferring Phase
+      B/C. The friction tax is small per-2w but compounds with
+      every push. Tagged "V0 blocker" in the file, but
+      mechanically not blocking — just slow.
+    confidence: tentative
 ---
 
 # Deploy to Cloudflare Pages
