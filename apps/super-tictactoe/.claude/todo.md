@@ -35,6 +35,9 @@ cost-benefit-sweh:
   - [x] Deploy — [Phase A complete](../../.claude/todo.kb/2026-02-05-000-deploy-cloudflare-pages.md), live at `bukzor-garden--super-tictactoe.pages.dev`
   - [ ] Theme selector — one vanity SKU (e.g. X/O colors)
   - [ ] AI opponent — minimax
+    - NB scope ruling (2026-08-30, `private.bukzor-llc/strategy.kb/products.kb/sttt.md`):
+      the *good* bot is out of ship scope — 20%-time play only; minimax here is
+      the modest V0 line-item, and the support button waits on none of this subtree
     - [x] Auto-play checkboxes (test harness)
     - [ ] Smarter AI — minimax ([design rationale](../../docs/dev/devlog/2026-02-06-000-minimax-ai-design.md))
       - [x] Add `enum_map` crate + derive `Enum` on `Mark`
