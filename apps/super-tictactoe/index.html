@@ -13,6 +13,14 @@
     <label><input type="checkbox" id="auto-o"> Auto O</label>
     <label>Delay: <input type="number" id="delay" value="1500" min="0" max="5000" style="width: 60px">ms</label>
 </div>
+<footer class="support">
+    <p class="support-pitch">Support this game</p>
+    <div class="support-buttons">
+        <a class="support-button" href="https://buy.stripe.com/PLACEHOLDER_MONTHLY">$0.50 / month</a>
+        <a class="support-button" href="https://buy.stripe.com/PLACEHOLDER_ANNUAL">$6 / year</a>
+    </div>
+    <p class="support-note">Same price either way -- the yearly one just loses less to card fees.</p>
+</footer>
 <script type="module">
     addEventListener("TrunkApplicationStarted", () => {
         window.app = new window.wasmBindings.App(document);

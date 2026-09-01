@@ -53,10 +53,18 @@ cost-benefit-sweh:
         - src/ai_minimax.rs has test specs ready; implement the `todo!()` stubs
       - [ ] Integration — replace pick_random in auto-play
     - [ ] Difficulty slider — smooth adjustment between random and optimal play
-  - [ ] Support button — "$0.50/mo" external checkout
-    - [ ] Research & choose payment platform (Stripe, Ko-fi, GitHub Sponsors, etc.)
-    - [ ] Set up account + configure $0.50/mo product
-    - [ ] Add button to page
+  - [ ] Support button -- external checkout, two SKUs
+    - [x] Research & choose payment platform -- Stripe Payment Links (ruled
+      2026-09-01; rationale, fee structure and the FEE_OPTIMIZE tripwire in
+      `private.bukzor-llc/strategy.kb/products.kb/sttt.md`)
+    - [ ] Set up Stripe account + configure the $0.50/mo and $6/yr products
+      -- needs the user's hands (identity, bank); activation runs 1-5
+      business days, so a test-mode link unblocks the wiring meanwhile
+    - [x] Add button to page -- `<footer class="support">` in index.html,
+      `.support*` rules in style.css, both hrefs still `PLACEHOLDER`
+    - [ ] Swap the two `PLACEHOLDER` hrefs for the real Payment Links
+      -- gate: `grep -c PLACEHOLDER index.html` must print `0` before
+      `trunk build --release` and any `wrangler pages deploy`
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later
