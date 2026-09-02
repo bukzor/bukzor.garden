@@ -87,8 +87,10 @@ cost-benefit-sweh:
       The two annual prices exist but sit on no payment link, so the site
       cannot reach them. The radios belonged to the pricing table, not the
       link
-    - [x] Deploy -- shipped 2026-09-02; production serves the footer, the
-      `Chip in` button and the real link. Gate printed `0`
+    - [x] Deploy -- shipped 2026-09-02; redeployed the same day with the
+      two-button footer (`aba44111`). Production serves both buttons, both
+      checkout URLs answer `200`, and the gate prints `0` -- now including
+      `js.stripe.com`, since the page is again free of third-party script
     - [x] Make the $6/yr SKU reachable -- it was on no payment link, so the
       site could not sell it. `plink_1UBKFN5PD8pFX1kD`
       (`buy.stripe.com/eVqeV6brKbDzbIUfLs1Nu01`) created 2026-09-02 over
