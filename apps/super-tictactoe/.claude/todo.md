@@ -78,13 +78,17 @@ cost-benefit-sweh:
       link, not three: all three prices ride a single `donate.stripe.com`
       link, with `Default` picking the initial radio selection. Footer
       collapsed to one button accordingly
-    - [ ] Confirm the link is *active*, then deploy
-      -- gate: `grep -c -e PLACEHOLDER -e 'stripe.com/test_' index.html`
-      must print `0` (it does), AND the link must not serve a deactivated
-      checkout. (Liveness clause agent-drafted 2026-09-02, vetoable: a
-      paused link returns HTTP 200 and passes every grep -- on 2026-09-02
-      this one served `inactive`/`deactivated` in the body while looking
-      perfectly healthy to a status-code check.)
+    - [x] Deploy -- shipped 2026-09-02; production serves the footer, the
+      `Chip in` button and the real link. Gate printed `0`
+    - [ ] Unpause the Payment Link -- the last thing between the live page
+      and money. The URL does not change when it lifts, so no redeploy
+      follows. G2 (`beam-search.md`: a public URL that accepts money by
+      2026-09-26) stays open until then: the page is public and the button
+      is live, but the checkout is deactivated
+      -- liveness gate (agent-drafted, vetoable): a paused link returns
+      HTTP 200 and passes every grep, so `grep -c -e PLACEHOLDER -e
+      'stripe.com/test_' index.html` printing `0` is necessary but not
+      sufficient. Check the response body for `inactive`/`deactivated`
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later
