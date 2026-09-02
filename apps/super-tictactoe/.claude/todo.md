@@ -57,16 +57,34 @@ cost-benefit-sweh:
     - [x] Research & choose payment platform -- Stripe Payment Links (ruled
       2026-09-01; rationale, fee structure and the FEE_OPTIMIZE tripwire in
       `private.bukzor-llc/strategy.kb/products.kb/sttt.md`)
-    - [ ] Set up Stripe account + configure the $0.50/mo and $6/yr products
-      -- needs the user's hands (identity, bank); activation runs 1-5
-      business days, so a test-mode link unblocks the wiring meanwhile
+    - [x] Set up Stripe account -- live 2026-09-02; sole proprietor,
+      DBA `bukzor.garden`
+      (`private.bukzor-llc/strategy.kb/merchant-identity.md`)
+    - [x] Configure the SKUs -- product `Support bukzor.garden`
+      (`prod_VBgL3XU4rNdIN0`) with three prices: $1/yr, $6/yr, and a
+      customer-chosen one-off. Replaces the original $0.50/mo (2026-09-02);
+      Stripe does not support customer-chosen amounts on recurring prices,
+      so the variable option is necessarily one-off
+    - [ ] Decide the one-off preset. Set 2026-09-02: preset $1, minimum
+      $0.50, maximum $50. Open (agent-drafted, vetoable): raise the preset
+      to ~$5. $6/yr is the default radio and $1/yr already serves "less",
+      so the open box is most likely reached by someone wanting to give
+      *more* -- whom a $1 preset answers with a dollar. Nets $0.67 against
+      $4.56. Counter: a low preset is friendlier and FEE_OPTIMIZE says
+      wait for data
     - [x] Add button to page -- `<footer class="support">` in index.html,
       `.support*` rules in style.css, both hrefs still `PLACEHOLDER`
-    - [ ] Swap the two `PLACEHOLDER` hrefs for the real Payment Links
+    - [x] Swap the `PLACEHOLDER` hrefs for the real Payment Link -- one
+      link, not three: all three prices ride a single `donate.stripe.com`
+      link, with `Default` picking the initial radio selection. Footer
+      collapsed to one button accordingly
+    - [ ] Confirm the link is *active*, then deploy
       -- gate: `grep -c -e PLACEHOLDER -e 'stripe.com/test_' index.html`
-      must print `0` before `trunk build --release` and any `wrangler pages
-      deploy` (test-link clause agent-drafted 2026-09-02, vetoable: a
-      test-mode link passes a PLACEHOLDER-only gate and takes no money)
+      must print `0` (it does), AND the link must not serve a deactivated
+      checkout. (Liveness clause agent-drafted 2026-09-02, vetoable: a
+      paused link returns HTTP 200 and passes every grep -- on 2026-09-02
+      this one served `inactive`/`deactivated` in the body while looking
+      perfectly healthy to a status-code check.)
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later

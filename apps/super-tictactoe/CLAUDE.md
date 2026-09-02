@@ -11,7 +11,7 @@ depends:
 - Click to place X/O
 - Win detection (sub-board and meta-board)
 - AI opponent (minimax)
-- Support button -- $0.50/mo and $6/yr external checkout (Stripe Payment Links)
+- Support button -- pay-what-you-want and $6/yr external checkout (Stripe Payment Links)
 - Deploy to Cloudflare Pages
 
 ## How To

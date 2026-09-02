@@ -71,6 +71,13 @@ Declarative infrastructure. CF Pages project defined in code.
 - **Custom domain is independent.** Low effort (~10 min), do whenever. Ship on `*.pages.dev` first.
   - `bukzor.garden` registered 2026-09-02 -- the Stripe statement descriptor now
     names it, so pointing it at the app is no longer purely cosmetic.
+  - No longer ~10 min, and no longer independent. Measured 2026-09-02: NS are
+    `dns{1,2}.registrar-servers.com` (Namecheap default) and the apex parks on
+    192.64.119.75, with HTTPS timing out. Moving to Cloudflare is a registrar
+    NS change plus propagation -- hours, not minutes -- before the Pages custom
+    domain and its cert can even be requested.
+  - Stripe's live merchant profile was pointed at `https://bukzor.garden`
+    during signup, so until this lands that profile advertises a dead URL.
 - **Pulumi projects are app-scoped.** Each app controls its own infra. Shared infra minimized.
 
 ## Success Criteria
