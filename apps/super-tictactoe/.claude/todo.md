@@ -85,10 +85,12 @@ cost-benefit-sweh:
       follows. G2 (`beam-search.md`: a public URL that accepts money by
       2026-09-26) stays open until then: the page is public and the button
       is live, but the checkout is deactivated
-      -- liveness gate (agent-drafted, vetoable): a paused link returns
-      HTTP 200 and passes every grep, so `grep -c -e PLACEHOLDER -e
-      'stripe.com/test_' index.html` printing `0` is necessary but not
-      sufficient. Check the response body for `inactive`/`deactivated`
+      -- liveness gate (agent-drafted, vetoable): `grep -c -e PLACEHOLDER
+      -e 'stripe.com/test_' -e 'pk_test_' index.html` must print `0`.
+      Necessary, not sufficient -- and since 2026-09-02 the checkout is a
+      `<stripe-pricing-table>` rendered by client-side JS, so `curl` can
+      no longer see whether it works. Someone must load the page in a
+      browser and confirm the table renders with prices
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later
