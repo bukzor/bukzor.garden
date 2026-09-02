@@ -63,8 +63,10 @@ cost-benefit-sweh:
     - [x] Add button to page -- `<footer class="support">` in index.html,
       `.support*` rules in style.css, both hrefs still `PLACEHOLDER`
     - [ ] Swap the two `PLACEHOLDER` hrefs for the real Payment Links
-      -- gate: `grep -c PLACEHOLDER index.html` must print `0` before
-      `trunk build --release` and any `wrangler pages deploy`
+      -- gate: `grep -c -e PLACEHOLDER -e 'stripe.com/test_' index.html`
+      must print `0` before `trunk build --release` and any `wrangler pages
+      deploy` (test-link clause agent-drafted 2026-09-02, vetoable: a
+      test-mode link passes a PLACEHOLDER-only gate and takes no money)
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later

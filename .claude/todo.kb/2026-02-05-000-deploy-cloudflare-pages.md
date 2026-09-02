@@ -69,6 +69,8 @@ Declarative infrastructure. CF Pages project defined in code.
 - **One CF Pages project per app.** Shared nothing. Aligns with design-for-throwaway.
 - **Wrangler pinned via pnpm** (`pnpm add -D wrangler`). Repo-local, locked in pnpm-lock.yaml.
 - **Custom domain is independent.** Low effort (~10 min), do whenever. Ship on `*.pages.dev` first.
+  - `bukzor.garden` registered 2026-09-02 -- the Stripe statement descriptor now
+    names it, so pointing it at the app is no longer purely cosmetic.
 - **Pulumi projects are app-scoped.** Each app controls its own infra. Shared infra minimized.
 
 ## Success Criteria
