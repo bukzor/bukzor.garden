@@ -24,6 +24,7 @@ cost-benefit-sweh:
 - [x] WASM hello-world for super-tictactoe
 - [ ] Super Tic-Tac-Toe V0 — see `apps/super-tictactoe/.claude/todo.md`
 - [ ] [Deploy to Cloudflare Pages](todo.kb/2026-02-05-000-deploy-cloudflare-pages.md) (graduated: script → GHA → Pulumi)
+- [ ] [Stripe configuration as code](todo.kb/2026-09-02-000-stripe-config-as-code.md) (import after the account is hand-bootstrapped)
 
 ## Later
 
