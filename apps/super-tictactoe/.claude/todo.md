@@ -71,26 +71,58 @@ cost-benefit-sweh:
       so the open box is most likely reached by someone wanting to give
       *more* -- whom a $1 preset answers with a dollar. Nets $0.67 against
       $4.56. Counter: a low preset is friendlier and FEE_OPTIMIZE says
-      wait for data
+      wait for data. Strengthened 2026-09-02: the page no longer carries
+      the fee note, so the preset is the only place left where the
+      "one larger gift" argument can act on a visitor
     - [x] Add button to page -- `<footer class="support">` in index.html,
       `.support*` rules in style.css, both hrefs still `PLACEHOLDER`
     - [x] Swap the `PLACEHOLDER` hrefs for the real Payment Link -- one
-      link, not three: all three prices ride a single `donate.stripe.com`
-      link, with `Default` picking the initial radio selection. Footer
-      collapsed to one button accordingly
+      link, `donate.stripe.com/dRm3co3Zi6jfeV6ar81Nu00`, footer collapsed
+      to one button accordingly
+      -- correction (2026-09-02, `stripe payment_links list --live`): the
+      claim recorded here, that all three prices rode this link behind
+      radios with `Default` preselected, was false. `plink_1UBIzE5PD8pFX1kD`
+      carries exactly one line item, the customer-chosen price
+      (`price_1UBIzE5PD8pFX1kD0Q309OM1`, min $0.50 / preset $1 / max $50).
+      The two annual prices exist but sit on no payment link, so the site
+      cannot reach them. The radios belonged to the pricing table, not the
+      link
     - [x] Deploy -- shipped 2026-09-02; production serves the footer, the
       `Chip in` button and the real link. Gate printed `0`
-    - [ ] Unpause the Payment Link -- the last thing between the live page
-      and money. The URL does not change when it lifts, so no redeploy
-      follows. G2 (`beam-search.md`: a public URL that accepts money by
-      2026-09-26) stays open until then: the page is public and the button
-      is live, but the checkout is deactivated
+    - [x] Make the $6/yr SKU reachable -- it was on no payment link, so the
+      site could not sell it. `plink_1UBKFN5PD8pFX1kD`
+      (`buy.stripe.com/eVqeV6brKbDzbIUfLs1Nu01`) created 2026-09-02 over
+      `price_1UBJ2y5PD8pFX1kD`. Footer is now two buttons, `$6 a year` and
+      `Any amount`; $1/yr stays priced in the account but off the page,
+      since the customer-chosen price already reaches down to $0.50
+    - [x] Cut the on-page fee note (user: it added 22 words to a page that
+      otherwise has six). The nudge it carried -- larger gifts net more
+      against a flat 30c -- is now structural: $6/yr sits first among two
+      buttons. What remains of it belongs in the preset, below
+    - [x] Unpause the Payment Link -- already unpaused. Read back
+      2026-09-02: `plink_1UBIzE5PD8pFX1kD` is `active: true`, and the
+      account reports `charges_enabled` and `payouts_enabled` true with
+      `details_submitted`. G2 (`beam-search.md`: a public URL that accepts
+      money by 2026-09-26) is met on capability -- no card has been run
+      through it, so end-to-end remains unproven
+    - [ ] Answer the past-due identity challenge --
+      `requirements.past_due` carries
+      `interv_1UBJY25PD8pFX1kD.identity_verification.challenge`. Charges
+      still work today; past-due requirements are what later disable an
+      account. Dashboard-only (KYC-bound, per MERCHANT_SEAM)
       -- liveness gate (agent-drafted, vetoable): `grep -c -e PLACEHOLDER
       -e 'stripe.com/test_' -e 'pk_test_' index.html` must print `0`.
-      Necessary, not sufficient -- and since 2026-09-02 the checkout is a
-      `<stripe-pricing-table>` rendered by client-side JS, so `curl` can
-      no longer see whether it works. Someone must load the page in a
-      browser and confirm the table renders with prices
+      Necessary, not sufficient: it proves the page points at the live
+      link, not that the link accepts money
+    - [x] Drop the `<stripe-pricing-table>` embed (2026-09-02, same day it
+      landed). The table showed two of the three prices -- the
+      customer-chosen one-off cannot appear in one -- amortized the annual
+      SKUs into `$0.08 per month` headlines that contradict the fee note
+      beneath them, repeated the product name and blurb once per column,
+      and rendered a white Stripe-blue card against the sepia page. The
+      amounts now ride the page's own copy above the one `Chip in` link,
+      which restores the curl-checkable gate and the page's freedom from
+      third-party JS
   - [ ] Auto-deploy via GHA — `cloudflare/wrangler-action` on push to main
 
 ## Later
