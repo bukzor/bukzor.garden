@@ -63,6 +63,13 @@ MERCHANT_SEAM.
 
 ## Work
 
+- [ ] Target a mode explicitly. Sandbox and live are separate object
+      graphs, and the `stripe` CLI binds to one context at a time —
+      as of 2026-09-02 it is bound to the sandbox, and `--live` is
+      refused outright until `stripe switch context` selects a live
+      account. Any executor must name its mode rather than inherit
+      whatever the operator's CLI last pointed at; a stack that
+      silently reconciles the sandbox is worse than no stack
 - [ ] Decide the executor: community Terraform-bridged Stripe provider
   vs. roll-your-own against the API
   (`web-scaling.claims.kb/iac.kb/{pulumi,roll-your-own}.md`). The
