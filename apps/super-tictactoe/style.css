@@ -24,7 +24,14 @@
  *   - Parent needs position: relative (unless already positioned)
  */
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 :root {
+    /* Footprint shared by the board and the rows above and below it */
+    --board-width: 500px;
+
     /* Accents: blue and orange, complementary */
     --color-x: hsl(203, 100%, 45%);
     --color-o: hsl(16, 87%, 59%);
@@ -61,7 +68,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: min(400px, 100%);
+    width: min(var(--board-width), 100%);
     margin-bottom: 10px;
     gap: 10px;
 }
@@ -116,11 +123,13 @@ body {
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    width: min(400px, 100%);
+    /* Fixed padding, not a percentage: a percentage resolves against the body,
+     * so the playfield would shrink as the window widens */
+    width: min(var(--board-width), 100%);
     container-type: inline-size;
     background: var(--color-surface);
     border-radius: 12px;
-    padding: 2%;
+    padding: 8px;
     box-shadow: 0 4px 24px hsl(40, 30%, 50%, 0.25);
 }
 
@@ -128,6 +137,9 @@ body {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    /* keep the rows tight when the meta-grid stretches this box; leftover
+     * height handed to auto rows would open gaps in the cell borders */
+    align-content: start;
     border-top: 1.25cqi solid var(--color-border);
     border-left: 1.25cqi solid var(--color-border);
     padding: 5%;
@@ -181,8 +193,8 @@ body {
 [data-mark="O"]::before {
     content: "";
     position: absolute;
-    width: 38cqi;
-    height: 38cqi;
+    width: 58cqi;
+    height: 58cqi;
     border: 10cqi solid var(--color-o);
     border-radius: 50%;
     transition: border-color 0.4s;
@@ -227,7 +239,7 @@ body {
  */
 .support {
     order: 1;
-    width: min(400px, 100%);
+    width: min(var(--board-width), 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
