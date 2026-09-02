@@ -53,11 +53,14 @@ Stripe splits into two halves that cannot be managed the same way.
   settings, customer-portal configuration.
 - **Console-only:** legal name, business name, statement descriptor,
   activation questionnaire — Stripe will not let an API key rewrite the
-  account's verified identity, by design. Pricing tables land here too,
-  for an unrelated reason: there is no `/v1/pricing_tables` endpoint at
-  all, so the object STTT's checkout currently embeds can be neither
-  authored nor `pulumi import`ed. Two causes, one disposition —
-  declare and reconcile.
+  account's verified identity, by design. A pricing table would land
+  here too, for an unrelated reason — there is no `/v1/pricing_tables`
+  endpoint at all, so one can be neither authored nor `pulumi import`ed
+  — but the checkout stopped embedding one in `a6cfba7` (ADR
+  `apps/super-tictactoe/docs/dev/adr/2026-09-02-000-checkout-is-our-markup-linking-out.md`,
+  decided on UX and `curl`-verifiability grounds). Keep it that way
+  while `CODE_ONLY` is the goal: Payment Links are API-addressable,
+  a pricing table is not.
 
 So the second half gets declared in the repo as source of truth and
 **reconciled** — read back from the API, diffed, CI fails on drift —
@@ -86,13 +89,6 @@ MERCHANT_SEAM.
   (`apps/super-tictactoe/infra/`)
 - [ ] `pulumi import` the hand-made objects; confirm a no-op preview
 - [ ] Reconciler for the console-only fields, wired into CI
-- [ ] Rule the pricing table's disposition: either the gate gains a
-      second clause (the reconciler covers it) or the checkout moves off
-      the pricing table onto API-addressable Payment Links / Checkout
-      Sessions, which deletes the problem. A no-op preview cannot see a
-      pricing table either way, so the gate as written is silent about
-      the one object the live checkout depends on. Raised 2026-09-02 by
-      an agent; unruled
 - [ ] Decide where the Stripe API key lives — blocked on the llc-scope
   rules REVOKE_PATH and MERCHANT_SEAM
 
