@@ -6,6 +6,16 @@
  *   - Use cqi for all proportional dimensions (size, stroke, radius)
  *   - Similar-sized containers → identical-looking marks
  *
+ * Grid Lines:
+ *   - Drawn as cell/sub-board borders, so a line reaches the next line only
+ *     if every box in a grid row resolves to the same height
+ *   - box-sizing: border-box keeps aspect-ratio off the content box, where a
+ *     left border would make a cell shorter than its col-0 neighbor
+ *   - align-content: start keeps a stretched sub-board from handing its
+ *     leftover height to the rows, which pries them apart
+ *   - Regressed twice (2026-02-04, 2026-09-02); measure gaps before trusting
+ *     a change here
+ *
  * Data Attributes:
  *   - data-mark="X"|"O" everywhere (cells, panels, status)
  *   - Single selector [data-mark="X"] styles all instances
