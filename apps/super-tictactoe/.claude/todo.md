@@ -138,7 +138,30 @@ cost-benefit-sweh:
 - [ ] Score tracking — session win counter across games
 - [ ] Revisit turn-indicator UI — consider integrating auto-play controls
 - [ ] Tablet layout — improve UI at tablet size, portrait and landscape
-- [ ] Fix vertical gap glitch — 1-3px gap between sub-board cell borders
+- [x] Fix vertical gap glitch -- 2.66px at worst, not the 1-3px estimated here.
+  Two content-box effects: `aspect-ratio: 1` sized the *content* box, so a cell
+  carrying a left border came out shorter than its col-0 neighbor; and a
+  sub-board stretched by the meta-grid fed its leftover height to the auto
+  rows. Fixed 2026-09-02 (`365de93`) with `box-sizing: border-box` globally
+  plus `align-content: start` on `.sub-board`; worst gap 0.016px, deployed and
+  verified live
+  - Fallout, agent-drafted and vetoable: the board now declares its footprint
+    (`--board-width`, 500px at the user's call) with fixed 8px padding, and
+    `.turn-indicator`/`.support` were pointed at the same variable so the
+    player panels stay flush with the board's edges. Previously they were
+    400px against a board that drifted between 418 and 434 with window width
+- [ ] Rethink how the grid lines are drawn. Today a line is the sum of three
+  cells' borders, so its continuity is emergent -- every box-model change is a
+  chance to break it, and it has broken twice. Acceptance: continuity belongs
+  to the container, such that no arrangement of cell heights or box models can
+  open a gap; the two weights (meta, inner) and the sub-board inset survive;
+  cells keep the marks, the hover, and the hit-testing
+  - Falsifiable either way: every cell's bottom edge coincides with the next
+    row's top edge (tolerance 0.05px) at several viewport widths, and the
+    2.66px gap that stood before `365de93` would fail it
+  - Prior art in-repo: gap + container background, rejected 2026-02-03 for
+    sub-pixel wobble at 1-2px. That objection is about line *width*, not
+    continuity, and it predates the fixed 500px footprint
 - [ ] Unit tests
 - [ ] Revisit board styling (beyond classic lines-on-white)
 - [ ] Immutable game state — `play` returns new state instead of mutating, cleaner for minimax

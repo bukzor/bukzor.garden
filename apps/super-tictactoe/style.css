@@ -13,8 +13,6 @@
  *     left border would make a cell shorter than its col-0 neighbor
  *   - align-content: start keeps a stretched sub-board from handing its
  *     leftover height to the rows, which pries them apart
- *   - Regressed twice (2026-02-04, 2026-09-02); measure gaps before trusting
- *     a change here
  *
  * Data Attributes:
  *   - data-mark="X"|"O" everywhere (cells, panels, status)
@@ -133,8 +131,8 @@ body {
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    /* Fixed padding, not a percentage: a percentage resolves against the body,
-     * so the playfield would shrink as the window widens */
+    /* px padding: a percentage resolves against the body, so it would eat
+     * into the playfield as the window widens */
     width: min(var(--board-width), 100%);
     container-type: inline-size;
     background: var(--color-surface);
@@ -147,8 +145,6 @@ body {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    /* keep the rows tight when the meta-grid stretches this box; leftover
-     * height handed to auto rows would open gaps in the cell borders */
     align-content: start;
     border-top: 1.25cqi solid var(--color-border);
     border-left: 1.25cqi solid var(--color-border);
